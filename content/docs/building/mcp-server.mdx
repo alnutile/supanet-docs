@@ -1,0 +1,55 @@
+---
+title: MCP server
+description: Let an external Claude build things in your SupaNet workspace.
+---
+
+SupaNet ships an **MCP server** - a JSON-RPC-over-HTTP endpoint that an external
+Claude can connect to. This is the door that lets a tool on your own machine push
+agents, tools, skills, webhooks, and artifacts into your workspace, where they
+show up in the dashboard.
+
+## How auth works
+
+The MCP server itself does not require a JWT, but every action is authenticated
+by a **per-user token** (`mcp_tokens`). You generate one in
+**Settings → Connect Claude**. Every action the external Claude takes runs as the
+token's owner, so it is bound by the same RLS rules as that user.
+
+## Connecting
+
+The two common clients connect differently:
+
+- **Claude Code** connects directly over HTTP:
+
+  ```bash
+  claude mcp add --transport http <name> <url>
+  ```
+
+- **Claude Desktop** launches MCP servers as local processes, so it connects
+  through the `mcp-remote` bridge configured in `claude_desktop_config.json`.
+
+Settings → Connect Claude emits both snippets for you. (The desktop snippet
+splits the auth header via an env var to dodge a known `mcp-remote` bug with
+spaces in headers.)
+
+## What it exposes
+
+The server exposes build tools so an outside Claude can populate your workspace:
+
+- `create_agent`
+- `create_http_tool`
+- `create_skill`
+- `create_webhook`
+- `create_artifact`
+- the matching `list_*` tools
+
+In practice this means you can sit in Claude on your laptop, describe an agent or
+a tool, and have it appear in SupaNet ready to use.
+
+## The artifact angle
+
+`create_artifact` is the tool that matters for documentation. An external Claude
+can push HTML straight into the `artifacts` table and get back the same public
+URL the in-app editor produces - which is exactly how you can publish a page (or
+these docs) into SupaNet from the outside. See
+[Teach SupaNet about itself](/docs/building/teach-supanet-about-itself).

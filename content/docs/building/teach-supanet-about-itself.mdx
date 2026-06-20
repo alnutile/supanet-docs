@@ -1,0 +1,73 @@
+---
+title: Teach SupaNet about itself
+description: Push these docs into SupaNet's knowledge base so the assistant can answer from them.
+---
+
+Here is the fun part. SupaNet has a knowledge base and an assistant. These docs
+explain how SupaNet works. So the obvious move is to **feed these docs into
+SupaNet**, so the in-app assistant can answer "how do I do X?" using the exact
+words you are reading here. Humans read the docs on this site; the assistant reads
+the same docs from inside the system. That is the loop.
+
+This page describes three ways to do it, from simplest to most automated.
+
+## Option 1 - Upload the docs as PDF knowledge
+
+The lowest-effort path uses the [knowledge base](/docs/using/files-and-knowledge)
+exactly as a normal user would.
+
+1. Export the docs (or the most important pages) to PDF.
+2. Upload the PDF in the Files area.
+3. Wait for it to be ingested - the text is extracted, chunked, and embedded
+   automatically.
+4. Leave its scope as `workspace` so everyone's chat can search it.
+
+Now anyone can ask the assistant "how do webhooks work in SupaNet?" and get an
+answer grounded in this documentation, with a citation back to the doc.
+
+This is the path that needs no code. It is also the literal "catch-22" the project
+set out to build: the documentation about the system becomes searchable knowledge
+*inside* the system.
+
+## Option 2 - Publish a page as an artifact
+
+If you want a doc to live as a shareable page inside SupaNet rather than (or as
+well as) searchable knowledge, publish it as an [artifact](/docs/using/artifacts).
+
+- Create an `html` artifact whose content is the rendered doc.
+- Set it to unlisted or public.
+- Share the standalone URL (`/functions/v1/p/<slug>`), which serves the artifact
+  as a clean full-page document.
+
+Because the page is served straight from the artifact, updating the artifact
+updates the live page. This is great for a single "how to use this workspace"
+page you want to link people to from inside SupaNet.
+
+## Option 3 - Push docs in from the outside via MCP
+
+The most automated path uses the [MCP server](/docs/building/mcp-server). An
+external Claude (Claude Code or Claude Desktop) connects to your workspace with an
+`mcp_tokens` token and calls `create_artifact` to push HTML up directly.
+
+This is powerful because it can be scripted: a build step turns each doc page into
+HTML and pushes it into SupaNet as an artifact, so the in-app docs stay in sync
+with this site without anyone copying and pasting. The same `create_artifact` tool
+the assistant uses internally is the one an outside tool uses to publish - same
+table, same public URL.
+
+<Callout type="info">
+  A natural next step is a one-call `publish_html` helper on the MCP server so a
+  doc page becomes an in-system page in a single command. Until then,
+  `create_artifact` does the job.
+</Callout>
+
+## Which to choose
+
+- Want the assistant to **answer questions** from the docs? Use **Option 1**
+  (knowledge base).
+- Want a **linkable page** inside SupaNet? Use **Option 2** (artifact).
+- Want it **automated and in sync** with this site? Use **Option 3** (MCP push).
+
+Many teams do both Option 1 and Option 3: the docs are both a searchable
+knowledge source *and* a set of live pages, kept current from the same source.
+The result is a system that can genuinely explain itself.

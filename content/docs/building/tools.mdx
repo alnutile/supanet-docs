@@ -1,0 +1,57 @@
+---
+title: Tools
+description: Tools-as-data - give the model new capabilities from a table row.
+---
+
+A **tool** is a capability the chat loop exposes to the model. The defining idea
+in SupaNet is **tools-as-data**: tools are rows in a `tools` table, not hardcoded
+functions. Add a row, and the model can do something new.
+
+## Kinds of tools
+
+- **`http`** - a custom tool. When the model calls it, the chat function POSTs
+  the model's inputs to the tool's configured URL and feeds the response back to
+  the model. This is how you connect SupaNet to any external API or your own
+  service.
+- **`web`** - switches on OpenRouter's web plugin, a portable web-browsing
+  capability that works across models. A seeded `web_browsing` tool ships on by
+  default.
+
+Tools are admin-managed on the Tools page.
+
+## The agentic loop
+
+When tools are available, the chat function runs a loop:
+
+1. Call the model.
+2. If the model returns tool calls, execute them (web plugin for `web`, an HTTP
+   POST for `http`).
+3. Append the assistant's turn, then add one tool-result message per call.
+4. Loop again, up to a maximum number of turns, until the model stops.
+
+This follows the OpenAI/OpenRouter function-calling shape: `tool_calls` on the
+assistant turn, `{role:'tool'}` messages carrying the results.
+
+## Scoping which tools are available
+
+By default the loop loads all active tools. But callers can restrict the set:
+
+- An **agent** restricts to its `tool_ids`.
+- A **webhook** runs read-only by default and only loads tools when explicitly
+  allowed (`allow_tools = true`) - a deterministic rule in code, not a model
+  decision, so an untrusted source cannot make the agent act.
+
+## Built-in tools
+
+Some tools are seeded and shared across every loop through a common module - for
+example `search_documents` (the PDF knowledge search) and the email tools
+`send_email` / `check_email`. Built-ins follow the same rules as any tool: admin
+activation, per-agent scoping, and the webhook gate all still apply.
+
+## When to reach for a tool vs Forge
+
+A `tool` row points the model at an endpoint that already exists. If the endpoint
+itself does not exist yet - you need a small piece of deterministic code the model
+cannot do reliably on its own - that is what [Forge](/docs/building/forge) is
+for. Forge generates and deploys the function, then registers it as an `http`
+tool, closing the loop.

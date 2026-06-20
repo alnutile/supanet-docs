@@ -1,0 +1,57 @@
+---
+title: Webhooks
+description: Three modes for letting outside systems trigger work in SupaNet.
+---
+
+A **webhook** lets an external system POST data into SupaNet and have something
+happen. Each webhook is a row with an opaque token; callers hit the public
+`webhook` edge function at `/functions/v1/webhook/<token>`.
+
+## Three modes, in precedence order
+
+When a payload arrives, the webhook function decides what to do based on how the
+webhook is configured. The precedence is:
+
+1. **Direct tool (`tool_id`)** - deterministic, no model. The payload is
+   validated against the tool's input schema (required fields and top-level
+   types), then POSTed straight to the tool's URL. A bad payload returns a 400
+   listing the offending fields. This is the "n8n function node" pattern: schema
+   validation *is* the gate, because nothing reaches an LLM.
+2. **Agent (`agent_id`)** - the payload runs through an [agent](/docs/building/agents)
+   (its prompt and tools) via the agent loop.
+3. **Prompt** - the payload runs against a plain prompt.
+
+## Read-only by default
+
+A webhook-targeted agent runs **read-only** unless `allow_tools = true`. Tools are
+only loaded when that flag is set - a deterministic rule in code, not a model
+decision - so an untrusted source cannot make the agent take actions.
+
+## Guardrails on the LLM paths
+
+The agent and prompt modes run a [guardrail](/docs/building/guardrails)
+pre-flight, and webhooks **fail closed**: if the guardrail errors or blocks, the
+run is stopped and logged as `blocked` (HTTP 403). The direct-tool mode skips
+this, because no LLM is involved - schema validation already gates it.
+
+## Optional shared secret
+
+The URL token alone is "secret URL" security. For real authentication, set a
+**secret** on the webhook. Callers must then present it as
+`Authorization: Bearer <secret>` or `X-Webhook-Secret: <secret>`, or the function
+returns 401 **before logging anything** - so a wrong or missing secret cannot spam
+the event log. A null secret means no secret (unchanged behaviour). It is a
+plaintext shared secret on the row, the same trust model as the token.
+
+## The event log
+
+Every call writes a `webhook_events` row (`received` → `ok` / `error` /
+`blocked`) with the result. The Webhooks page subscribes to these over Realtime
+for a live log. Outcomes also land in the activity log.
+
+## Pairing with Forge
+
+Because [forged functions](/docs/building/forge) are `http` tools, the editor's
+"call a function directly" picker lists them, shows their fields and types, and
+renders a sample payload - making the deterministic direct-tool mode easy to wire
+up.

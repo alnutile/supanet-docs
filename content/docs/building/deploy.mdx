@@ -1,0 +1,75 @@
+---
+title: Deploy
+description: Run SupaNet locally and ship it.
+---
+
+SupaNet is a standard Vite + React app with Supabase Edge Functions. If you have
+deployed a Supabase project before, none of this will surprise you.
+
+## Local development
+
+```bash
+npm install        # install deps
+npm run dev        # Vite dev server on http://localhost:5173
+npm run build      # typecheck (tsc -b) + vite build
+npm run lint       # eslint
+npm run typecheck  # tsc -b --noEmit
+npm run gen:types  # regenerate database types from the linked project
+```
+
+Always run `npm run build` before committing UI or logic changes - it typechecks
+the whole app.
+
+## Environment and secrets
+
+Two kinds of configuration matter, and keeping them separate is the whole game.
+
+**Front end (build-time, public):**
+
+| Variable | Notes |
+| --- | --- |
+| `VITE_SUPABASE_URL` | Inlined into the bundle |
+| `VITE_SUPABASE_ANON_KEY` | Public by design - RLS protects the data |
+
+These are read at **build time**, so they must exist before `npm run build`.
+
+**Edge function secrets (server-side only):**
+
+| Variable | Notes |
+| --- | --- |
+| `OPENROUTER_API_KEY` | Required. Set with `supabase secrets set ...`, never commit it |
+| `OPENROUTER_MODEL` / `OPENROUTER_EFFORT` | Optional overrides |
+| `OPENROUTER_SITE_URL` / `OPENROUTER_APP_NAME` | Optional ranking headers |
+
+<Callout type="warn">
+  Never put a secret in the front end. Only the anon key belongs there. The
+  OpenRouter key is an edge-function secret and must stay server-side.
+</Callout>
+
+## Database
+
+The schema lives in `supabase/migrations` (base migration plus later ones). If
+you change the schema: update the migration, apply it, regenerate the types with
+`npm run gen:types`, and re-check the Supabase security advisors.
+
+On a brand-new project the `storage` schema can lag a few seconds. If applying
+the full migration fails on `storage.buckets`, apply the core tables first, then
+the storage section.
+
+## Auth redirects
+
+Confirmation and magic-link emails use the Supabase project's **Site URL** plus
+the Redirect URLs allowlist. Set these to your deployed origin, or links will
+point at localhost.
+
+## Hosting
+
+The repo ships with config for hosting that auto-deploys from `main` (a
+`railway.json` and a `DEPLOY.md`). The workflow is trunk-based: run `npm run
+build`, commit, and push to `main`; hosting picks it up.
+
+## Production serve
+
+```bash
+npm run start  # serve dist/ with SPA fallback
+```

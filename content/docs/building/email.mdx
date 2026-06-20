@@ -1,0 +1,46 @@
+---
+title: Email
+description: Send and receive mail, with credentials kept in Supabase Vault.
+---
+
+SupaNet can send and receive email so that agents and users can act over mail -
+the "morning agent emails me a summary" pattern, or an inbox an agent can read.
+Two seeded built-in tools, `send_email` and `check_email`, become available once
+an admin configures a provider in **Settings → Email**.
+
+## Sending
+
+Sending goes through an HTTP provider (such as Postmark or Resend), not raw SMTP.
+Because sending is exfiltration-capable, `send_email` stays an ordinary tool row,
+so all the usual controls apply: admin activation, per-agent `tool_ids` scoping,
+and the webhook `allow_tools` gate. On top of that it adds:
+
+- an optional **recipient allowlist** (an exact address or an `@domain` suffix),
+- a **rate limit** (20 sends per hour), and
+- an **`email.sent` activity-log entry** for every send.
+
+## Receiving
+
+Receiving is **inbound-parse, not IMAP**. The provider POSTs each incoming
+message to the public `email-inbound` edge function (token-gated like a webhook),
+which normalises it into the `inbox_messages` table. `check_email` then reads that
+table - so it is push, not polling.
+
+## Where credentials live
+
+Email credentials live **only in Supabase Vault**. The non-secret config sits in
+a `public.integrations` row with a pointer to the secret; the actual key is never
+a table column, never in a client payload, and never logged.
+
+The flow is tight:
+
+- The client writes the key solely through an admin-gated, security-definer RPC
+  (`set_email_integration`), which checks admin status in its body.
+- Edge functions read the decrypted key only through a service-role-only RPC
+  (`read_email_secret`).
+
+## Runs everywhere
+
+`send_email` and `check_email` execute through the shared built-ins module, so
+they work identically in all three loops - chat, webhook, and scheduler. That is
+what makes a scheduled agent able to email you without any special wiring.

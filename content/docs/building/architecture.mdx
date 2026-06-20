@@ -1,0 +1,67 @@
+---
+title: Architecture
+description: The layers, the data flow, and how a chat turn actually works.
+---
+
+SupaNet is a React front end over Supabase, with the AI logic living in Supabase
+Edge Functions so that secrets never reach the browser.
+
+## The layers
+
+- **Front end** - a React + Vite app. Auth is wrapped in an `AuthContext`; a
+  `ProtectedRoute` gates the authenticated app. Pages cover chat, artifacts,
+  files, skills, webhooks, tools, agents, plugins, activity, usage, and settings.
+- **Supabase** - Postgres (with `pgvector` for embeddings), Auth, Storage,
+  Realtime, and Edge Functions.
+- **Edge Functions** - the server-side brain. The `chat` function runs the
+  assistant; other functions handle webhooks, the public MCP server, standalone
+  artifact pages, inbound email, and scheduled runs.
+- **OpenRouter** - the model provider. SupaNet talks to it through a shared
+  client so every loop (chat, webhook, scheduler, guardrails) behaves
+  consistently.
+
+## The key security stance
+
+The browser holds only the **public anon key**. The OpenRouter API key lives as
+an edge-function secret and is used only server-side. Row-level security (RLS)
+decides what any given user can read or write. This means even though the anon
+key ships in the bundle, the data behind it is protected by Postgres, not by
+hiding the key.
+
+## How a chat turn works
+
+1. The client sends the message history plus the user's access token to the
+   `chat` edge function.
+2. The function assembles a **system prompt**: it loads all always-on prompts
+   (`skills.auto_apply = true`) with the service role, optionally layered with an
+   invoked skill or an agent's instructions.
+3. It loads the active **tools** the model is allowed to use.
+4. It runs an **agentic loop**: the model may call tools; the function executes
+   them, feeds the results back, and loops until the model is done or it hits a
+   turn limit.
+5. The reply **streams** back to the browser as server-sent events.
+
+## Model selection
+
+Never hardcode a model id. Features bind to a **profile key**, not a specific
+model:
+
+- `orchestrator` - the main brain for chat, agents, webhooks, and scheduled runs.
+- `utility` - cheap and fast, used for guardrail checks and other lightweight
+  calls.
+
+Admins re-point a key to a different model in **Settings → Models**. The database
+row is the source of truth; an environment variable is only a fallback.
+
+## Realtime
+
+Chat messages and conversations are published over Supabase Realtime, so a
+message sent on one device appears on another. The client de-duplicates between
+its optimistic insert and the realtime echo so nothing double-renders.
+
+## Configuration as data
+
+The recurring theme: capabilities are **rows**, not code. Tools, skills, prompts,
+agents, guardrails, and webhooks all live in tables and are read at runtime. This
+is what lets an admin reshape the assistant's behaviour from the UI without a
+redeploy, and it is the backbone every other building page builds on.

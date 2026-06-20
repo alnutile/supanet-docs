@@ -1,0 +1,60 @@
+---
+title: Files & knowledge
+description: Upload files and PDFs, then ask SupaNet questions about them.
+---
+
+SupaNet has a Files area where you and your team can store documents. PDFs get
+special treatment: once uploaded, the assistant can read them and answer
+questions from their contents.
+
+## Uploading files
+
+Drop files into the Files page (or attach them in chat). Each file is stored
+privately under your account. When you want to share one, SupaNet can generate a
+**temporary share link** that works for a week, so you can hand a file to
+someone without making it public forever.
+
+## Turning PDFs into knowledge
+
+This is the part that makes SupaNet feel smart about *your* world.
+
+When you upload a PDF, SupaNet quietly does the following in the background:
+
+1. Pulls the text out of the PDF.
+2. Breaks it into small chunks.
+3. Builds a searchable index of those chunks.
+
+After that, the assistant can search across your PDFs and pull in the relevant
+passages when you ask a question - and it tells you **which document** each
+answer came from, so you can trust and verify it.
+
+You do not have to do anything to trigger this. Upload the PDF and, a short time
+later, it is searchable.
+
+<Callout type="info">
+  Right now this works for PDFs that contain real text. Scanned PDFs that are
+  just images of text are not searchable yet.
+</Callout>
+
+## Shared by default, private when you want
+
+By default, the *knowledge* from a PDF is **shared with your workspace** - any
+teammate's chat can find and use it. That is usually what you want: one person
+uploads the handbook, everyone can ask about it.
+
+If a document is sensitive, the owner can flip it to **"Only me"** so only they
+can use its contents.
+
+Two important details:
+
+- This sharing is about the **searchable text**, not the raw file. The original
+  PDF stays private to whoever uploaded it. Only the extracted passages are
+  shared.
+- Only the **owner** can change whether a document is shared or private.
+
+## Putting it together
+
+The practical workflow looks like this: someone uploads the policies, the
+contracts, the spec sheets. From then on, anyone on the team can open the chat
+and ask "what does our refund policy say?" and get an answer grounded in the
+actual document, with a citation pointing back to it.

@@ -1,0 +1,69 @@
+---
+title: Data model
+description: The tables, the enums, and the RLS rules that protect them.
+---
+
+SupaNet's behaviour is mostly defined by its database. Understanding the tables
+and, more importantly, the row-level security (RLS) rules is the key to working
+on it safely.
+
+## The tables
+
+The schema lives in `supabase/migrations`. The main tables:
+
+- `profiles`, `conversations`, `messages` - users and chat.
+- `artifacts`, `files` - saved content and uploads.
+- `documents`, `document_chunks` - the PDF knowledge base (chunks live in
+  `pgvector`).
+- `skills` - both always-on prompts and on-demand skills.
+- `tools`, `agents`, `guardrails` - the configurable capabilities.
+- `webhooks`, `webhook_events` - inbound triggers and their log.
+- `activity_log` - the live feed of what the system did.
+- `mcp_tokens` - per-user tokens for the MCP server.
+- `model_profiles` - the `orchestrator` / `utility` model bindings.
+- `integrations`, `inbox_messages` - Vault-backed email config and the inbox.
+- `plugins` - the installed-plugin registry.
+- `usage_events` - per-call token and cost accounting.
+- `allowed_emails` - the invite allowlist.
+- `forged_functions` - the audit/redeploy record for Forge.
+
+Enums include `visibility` (`private` / `unlisted` / `public`), `message_role`,
+and `artifact_type`.
+
+## RLS is the security boundary
+
+This is the rule that matters most: **RLS is the security boundary - never weaken
+it.** The browser holds the public anon key, so anything not protected by a policy
+is effectively public.
+
+The core patterns:
+
+- **Owner-only tables** (`conversations`, `messages`, `files`, `profiles`) scope
+  rows to `owner_id = auth.uid()` (profiles use `id = auth.uid()`).
+- **Artifacts** are readable by the owner *or* when `visibility <> 'private'` -
+  that is exactly how anonymous `/share/a/:slug` access works.
+- **Storage** for the `files` bucket is private; policies scope objects to the
+  uploading user's folder.
+- **Knowledge sharing** is separate from file visibility. Document chunks are
+  readable by the owner or when the parent document's scope is `workspace`; only
+  the owner can change the scope. The raw PDF stays owner-private regardless.
+
+## Invite-only signup
+
+The first signup becomes the admin. After that, a BEFORE INSERT guard on
+`auth.users` rejects signups unless the email is in `allowed_emails` (admin
+managed). Admins manage invites in **Settings → Invite people**. A trigger
+auto-creates a `profiles` row on signup.
+
+## When you change the schema
+
+Update the migration, apply it, run `npm run gen:types` to regenerate the typed
+schema, and re-check the Supabase security advisors. Keeping `database.types.ts`
+in sync with the migrations is what keeps the front end type-safe.
+
+## Usage and cost
+
+Every model call returns a usage object (tokens and cost). A shared helper writes
+one `usage_events` row per call from all four loops. The admin-only Usage page
+summarises spend and shows the OpenRouter balance. RLS on `usage_events` mirrors
+the activity log: own-or-admin read, service-role writes only.

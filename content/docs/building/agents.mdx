@@ -1,0 +1,47 @@
+---
+title: Agents
+description: Deployable units of prompt plus tools, runnable from chat, webhooks, or a schedule.
+---
+
+An **agent** is a named, deployable unit: a system prompt (its instructions) plus
+the set of tools it is allowed to use. Agents are how you package a specific job
+so it can be run consistently from several places.
+
+## What an agent is made of
+
+An `agents` row holds:
+
+- a **name**,
+- **instructions** (its system prompt), and
+- **`tool_ids`** - the tools it may call.
+
+The Agents page is the dashboard for creating and editing them. Agents are
+visible across the workspace.
+
+## Running an agent
+
+The same agent can run in three contexts:
+
+- **From chat.** Opening `/chat?agent=:id` layers the agent's prompt onto the
+  conversation and scopes the available tools to just the agent's tools.
+- **From a webhook.** A webhook can target an agent, so an incoming payload is
+  run through the agent's prompt and tools instead of a bare prompt. See
+  [Webhooks](/docs/building/webhooks).
+- **On a schedule.** A `schedules` row pairs an agent with an input and an
+  interval. A `scheduler` edge function, ticked once a minute by `pg_cron`, runs
+  due schedules. You manage schedules inside the agent editor.
+
+## Why scope tools per agent
+
+Restricting an agent to specific tools is both a safety and a quality measure. A
+focused agent with three relevant tools behaves more predictably than one with
+access to everything. And when an agent runs from an untrusted trigger like a
+webhook, a tight toolset limits what a bad input could cause it to do.
+
+## The shared execution path
+
+All three loops (chat, webhook, scheduler) execute built-in tools through one
+shared module, so a capability like "search the knowledge base" or "send email"
+behaves identically whether you are chatting live or an agent is running at 6am.
+That is what makes "the morning agent emails me a summary" reliable - it is the
+same machinery as chat, just triggered differently.

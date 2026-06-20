@@ -1,0 +1,64 @@
+---
+title: Forge
+description: Generate and deploy new edge functions from a plain-language description.
+---
+
+Forge closes a gap that "configuration as data" cannot: sometimes you need
+genuinely new code, not just a new row. An admin describes a capability in plain
+language, and Forge generates a Deno function, **deploys it to the live project**,
+and registers it as a tool the rest of SupaNet can call.
+
+## What it is for
+
+Use Forge for deterministic work the model cannot do reliably on its own:
+
+- a calculator or unit converter,
+- a precise data transform,
+- a validate-then-call wrapper around an external API.
+
+The result is a `kind='http'` [tool](/docs/building/tools), so chat, agents,
+webhooks, and the scheduler can all call it like any other custom tool.
+
+## How it works
+
+1. An admin describes the capability on the Forge page.
+2. The admin-only `forge` edge function generates the function source with the
+   orchestrator model.
+3. It deploys the function to the project via the Supabase Management API.
+4. It registers the new function as an `http` tool, linked back to the Forge
+   record.
+
+The generated code is just an `async function handler(input)`. A **fixed harness**
+owns request handling, CORS, and a per-function token check, so the
+security-critical plumbing is never the model's to write.
+
+## Security model
+
+Forge is powerful, so it is locked down at every step:
+
+- **Admin-only** at every entry point.
+- The Management API token lives in exactly one server-side module and never
+  reaches generated code.
+- A **static deny-list lint** rejects generated code that touches environment
+  variables, the service-role key, tokens, subprocesses, the filesystem, or
+  `eval`.
+- A **guardrail pre-flight** screens the generated code before deploy.
+- Forge **fails closed**: any lint hit, guardrail block, or failed dry-run aborts
+  before the real deploy happens.
+- Generated functions get **no database or secret access** - pure compute plus
+  `fetch()` only.
+
+## Audit and redeploy
+
+Because API-deployed functions do not live in the repository, the `forged_functions`
+table is the source of truth for redeploys: it stores the spec, the generated
+source, the slug, the model used, status, the invoke token, and the linked tool.
+The linked tool shows a "Forged" badge so it is clear where it came from. Outcomes
+are written to the activity log.
+
+## Pairing with webhooks
+
+Forged functions are `http` tools, which makes them perfect for the deterministic
+webhook mode (an "n8n function node" style call). A webhook can call a forged
+function directly, with no model in the loop - see
+[Webhooks](/docs/building/webhooks).

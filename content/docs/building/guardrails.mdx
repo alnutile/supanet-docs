@@ -1,0 +1,56 @@
+---
+title: Guardrails
+description: Pre-flight checks that run before the model does.
+---
+
+A **guardrail** is an admin-managed check that runs *before* the main model does
+its work. Guardrails are how you screen untrusted input - especially from
+webhooks - for things like prompt injection.
+
+## How a guardrail is defined
+
+Each guardrail row has:
+
+- **instructions** - what to check for,
+- **scope flags** - `applies_to_webhooks` and/or `applies_to_chat`, and
+- an **action** - `block` or `flag`.
+
+They are managed on the admin-only Guardrails page.
+
+## How they run
+
+Before the orchestrator runs, SupaNet loads the active checks for the context and
+makes **one** call with the cheap `utility` model. The content being screened is
+passed in as untrusted data inside delimiters, and the evaluator returns a strict
+JSON verdict.
+
+The crucial detail: **enforcement happens in code acting on the parsed JSON. The
+verdict is never inserted into the orchestrator's prompt.** This keeps the check
+itself out of reach of injection - a malicious payload cannot talk its way past
+the guardrail by addressing the main model, because the main model never sees the
+verdict.
+
+## Fail-open vs fail-closed
+
+The two contexts deliberately behave differently:
+
+- **Webhooks fail closed.** If the evaluator errors, the run is blocked. Untrusted
+  input does not get the benefit of the doubt.
+- **Chat fails open.** If the evaluator errors, the message goes through. A real
+  user mid-conversation should not be stonewalled by an evaluator hiccup.
+
+A `block` verdict stops the run; a `flag` verdict only logs. Outcomes are written
+to the activity log as `guardrail.blocked`, `.flagged`, or `.error`.
+
+## What ships by default
+
+A seeded built-in **"Prompt injection screen"** applies to webhooks and blocks on
+a hit. That gives you a sane default the moment you expose a webhook to the
+outside world.
+
+## Where guardrails fit
+
+Guardrails are the first line in the defence-in-depth story: a guardrail screens
+the input, [tool scoping](/docs/building/tools) limits what can be done, the
+webhook `allow_tools` gate keeps untrusted triggers read-only, and
+[RLS](/docs/building/data-model) backstops everything at the data layer.

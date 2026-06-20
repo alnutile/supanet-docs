@@ -1,0 +1,18 @@
+{
+  "title": "Building on SupaNet",
+  "icon": "Wrench",
+  "pages": [
+    "index",
+    "architecture",
+    "deploy",
+    "agents",
+    "tools",
+    "forge",
+    "guardrails",
+    "mcp-server",
+    "webhooks",
+    "email",
+    "data-model",
+    "teach-supanet-about-itself"
+  ]
+}

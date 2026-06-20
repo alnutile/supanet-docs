@@ -1,0 +1,13 @@
+{
+  "title": "Using SupaNet",
+  "icon": "Sparkles",
+  "pages": [
+    "index",
+    "chat",
+    "artifacts",
+    "files-and-knowledge",
+    "skills-and-prompts",
+    "automation",
+    "whats-possible"
+  ]
+}

@@ -1,0 +1,41 @@
+---
+title: Automation
+description: Let SupaNet react to events and do work on a schedule.
+---
+
+SupaNet does not only work when you are typing at it. It can react to things
+happening elsewhere and run jobs on a timer. You do not need to build any of
+this yourself - this page is just so you know what is possible and can ask for
+it.
+
+## Reacting to events (webhooks)
+
+Other systems can send information into SupaNet through a **webhook** - a private
+address that, say, your form tool or your CRM posts to when something happens.
+SupaNet can then run a prompt or an agent against whatever came in.
+
+In plain terms: "when a new lead arrives, summarise it and file it" or "when this
+form is submitted, check it and flag anything odd." The event arrives, SupaNet
+does the work, and it is all recorded.
+
+## Running on a schedule
+
+SupaNet can run an agent on a repeating schedule - every morning, every hour,
+whatever you need. A classic example is "every morning, gather X and email me a
+summary." You set it up once and it just keeps happening.
+
+## The activity feed
+
+Whenever SupaNet does something on its own - uses a tool, processes a webhook,
+runs a scheduled job - it writes a line to the **activity feed**. This gives you
+a live, running record of what the system has been up to.
+
+What you see in the feed respects your permissions: you see your own activity,
+and admins can see everything across the workspace.
+
+## Why you would care
+
+Automation is what turns SupaNet from "a chat I visit" into "a teammate that is
+always on." The chat is for when you are present; webhooks and schedules are for
+when you are not. If you find yourself doing the same small task over and over,
+that is usually a sign it could be automated - ask whoever runs your workspace.

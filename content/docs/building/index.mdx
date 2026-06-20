@@ -1,0 +1,55 @@
+---
+title: Building on SupaNet
+description: How SupaNet is put together and how to run and extend it.
+---
+
+This section is for people who want to run SupaNet, change it, or build on top
+of it. It assumes you are comfortable with a terminal, a bit of TypeScript, and
+the basics of [Supabase](https://supabase.com).
+
+## What SupaNet is, technically
+
+SupaNet is a **React intranet layer on top of Supabase**. Supabase provides the
+database, auth, file storage, realtime, and edge functions. SupaNet adds the
+parts that make it feel like an AI workspace: a chat assistant, shareable
+artifacts, a PDF knowledge base, webhooks, agents, tools, and an admin surface to
+manage all of it.
+
+A defining principle: **the AI key never touches the browser.** The model is
+called from a server-side Supabase Edge Function. The browser only ever holds the
+public Supabase anon key, and the database's row-level security (RLS) is the real
+security boundary.
+
+## The big ideas
+
+- **Configuration as data.** Tools, prompts, skills, agents, guardrails, and
+  webhooks are rows in tables, not hardcoded. Admins manage them in the UI, and
+  the chat loop reads them at runtime. This is what lets you reshape the
+  assistant without redeploying.
+- **RLS is the boundary.** Never weaken it. Who can see what is enforced by
+  Postgres policies, so even the browser holding the anon key only sees what it
+  is allowed to.
+- **One model, many loops.** The same orchestration runs chat, webhooks,
+  scheduled agents, and guardrail checks, sharing one OpenRouter client.
+
+## Where to go next
+
+<Cards>
+  <Card title="Architecture" href="/docs/building/architecture" description="The data flow, the layers, and how a chat turn actually works." />
+  <Card title="Deploy" href="/docs/building/deploy" description="Run it locally and ship it." />
+  <Card title="Agents" href="/docs/building/agents" description="Deployable units of prompt + tools, runnable from chat, webhooks, or a schedule." />
+  <Card title="Tools" href="/docs/building/tools" description="Tools-as-data: give the model new capabilities from a table row." />
+  <Card title="Forge" href="/docs/building/forge" description="Generate and deploy new edge functions from a description." />
+  <Card title="Guardrails" href="/docs/building/guardrails" description="Pre-flight checks that run before the model does." />
+  <Card title="MCP server" href="/docs/building/mcp-server" description="Let an external Claude build things in your workspace." />
+  <Card title="Webhooks" href="/docs/building/webhooks" description="Three modes for letting outside systems trigger work." />
+  <Card title="Email" href="/docs/building/email" description="Send and receive mail with credentials kept in Vault." />
+  <Card title="Data model" href="/docs/building/data-model" description="The tables, enums, and the RLS rules that protect them." />
+  <Card title="Teach SupaNet about itself" href="/docs/building/teach-supanet-about-itself" description="Push these docs into SupaNet's knowledge base." />
+</Cards>
+
+<Callout type="warn">
+  These docs describe the system at a conceptual level so they stay useful as the
+  code evolves. For the exact, current implementation, the repository's
+  `CLAUDE.md` and the `supabase/migrations` folder are the source of truth.
+</Callout>
