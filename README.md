@@ -1,5 +1,10 @@
 # SupaNet Docs
 
+**Visit [here](https://supanet-docs.dailyai.studio/)**
+
+<img width="2992" height="1682" alt="CleanShot 2026-06-22 at 14 06 32@2x" src="https://github.com/user-attachments/assets/1b3c4002-1cd8-4fd6-9cc0-8b299f225a13" />
+
+
 The documentation site for **SupaNet** - a private AI workspace built on
 Supabase. Built with [Fumadocs](https://fumadocs.dev) (Next.js).
 
