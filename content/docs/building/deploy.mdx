@@ -62,11 +62,33 @@ Confirmation and magic-link emails use the Supabase project's **Site URL** plus
 the Redirect URLs allowlist. Set these to your deployed origin, or links will
 point at localhost.
 
-## Hosting
+## Automatic deployments
 
-The repo ships with config for hosting that auto-deploys from `main` (a
-`railway.json` and a `DEPLOY.md`). The workflow is trunk-based: run `npm run
-build`, commit, and push to `main`; hosting picks it up.
+The repo ships with GitHub Actions that auto-deploy from `main`:
+
+**Frontend and edge functions:** pushing to `main` rebuilds the frontend
+(Railway) and redeploys edge functions to Supabase.
+
+**Database migrations:** a separate workflow (`deploy-migrations.yml`) runs
+`supabase db push` whenever a file under `supabase/migrations/` changes on
+`main`. This automatically applies new migrations to your database - no manual
+step needed. The Supabase CLI tracks what is already applied, so re-runs only
+deploy pending migrations.
+
+To set up migration deploys, add two repository secrets:
+
+- `SUPABASE_ACCESS_TOKEN` - a Supabase personal access token (reuse the same one
+  you use for function deploys).
+- `SUPABASE_DB_PASSWORD` - your project's database password. Migrations need this
+  because they connect straight to Postgres; the access token alone is not enough.
+
+The workflow respects the `SUPABASE_PROJECT_REF` repository variable (your
+project ID), defaulting to the one in `config.toml` if not set.
+
+## Workflow
+
+The workflow is trunk-based: run `npm run build`, commit, and push to `main`;
+hosting and migrations pick it up.
 
 ## Production serve
 
