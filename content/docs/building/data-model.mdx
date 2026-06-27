@@ -20,6 +20,8 @@ The schema lives in `supabase/migrations`. The main tables:
 - `webhooks`, `webhook_events` - inbound triggers and their log.
 - `activity_log` - the live feed of what the system did.
 - `mcp_tokens` - per-user tokens for the MCP server.
+- `mcp_servers` - connected external MCP endpoints (Zapier, etc.), each with its
+  own token in Vault and cached toolset.
 - `model_profiles` - the `orchestrator` / `utility` model bindings.
 - `integrations`, `inbox_messages` - Vault-backed email config and the inbox.
 - `plugins` - the installed-plugin registry.

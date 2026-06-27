@@ -1,0 +1,77 @@
+---
+title: External MCP servers
+description: Connect to external MCP services so agents can call their tools.
+---
+
+SupaNet can connect outbound to **any number of external MCP endpoints** — like
+Zapier MCP (for Gmail, Calendar, and more), plus others — so your agents and chat
+can call their remote tools. This is the inverse of the [MCP server](/docs/building/mcp-server):
+instead of an external Claude connecting *into* SupaNet, SupaNet connects *out* to
+external services.
+
+## How it works
+
+An admin adds MCP servers in **Settings → External MCP servers**. Each server has:
+
+- A **label** (e.g. "zapier") used to namespace the remote tools (e.g.
+  `zapier__gmail_find_email`).
+- An **endpoint URL** (the MCP server's HTTP address).
+- A **bearer token** stored securely in Supabase Vault — never in the browser, never
+  in logs.
+
+Every server gets a `tools` row of `kind='mcp'` as its in-app handle. Once active,
+agents and chat can call its remote tools just like any other tool.
+
+## Adding and managing servers
+
+### Add a server
+
+Click **Add MCP server** in Settings, fill in the label, URL, and bearer token, then
+click **Add server**. The server is created and cached tools are discovered lazily
+on the first agent run.
+
+### Connect & list
+
+To validate the server immediately and see its tools, click **Connect & list tools**.
+This runs the MCP handshake server-side, discovers the remote tools, and caches them
+— so SupaNet doesn't re-handshake on every message.
+
+### Edit and remove
+
+Click **Edit** to update the label or URL. The token field is write-only: if you
+leave it blank, the existing token is kept. Click **Remove** to delete a server and
+disable its tools.
+
+## Usage in agents
+
+Each server is automatically registered as a tool. An admin can:
+
+- **Activate** a server's tools globally by toggling the switch next to it.
+- **Scope** it to an agent by adding its tool row to the agent's `tool_ids` on the
+  Agents page, so only that agent can use them.
+
+The token is read at runtime from Vault, so it is only ever known to the edge
+function executing the tool call.
+
+## Security notes
+
+- **Tokens are write-only** — they live only in Vault. You paste them in SupaNet
+  once; they never come back out of the database or the browser.
+- **Workspace-wide trust** — external tools are exfiltration-capable (they can send
+  mail or take any action the remote service allows), so they carry the same
+  trust level as built-in tools like `send_email`. Only activate them if you trust
+  the service.
+- **RLS applies** — the token runs on behalf of the workspace (service role). The
+  decision to use a tool still respects agent `tool_ids` scoping and the
+  `webhooks.allow_tools` gate (webhooks run read-only by default).
+
+## Phase 2 (planned, not built)
+
+In future:
+
+- **Per-user servers** — each team member can add their own MCP endpoints (e.g. a
+  personal Zapier account) without sharing credentials.
+- **Auto-refresh** — discovered tools are cached for 10 minutes; future versions
+  may auto-refresh more aggressively or on-demand.
+- **Per-user admin** — Settings might expose a member-facing "Connect MCP server"
+  UI for team members to add their own endpoints.

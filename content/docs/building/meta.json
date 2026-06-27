@@ -11,6 +11,7 @@
     "forge",
     "guardrails",
     "mcp-server",
+    "external-mcp-servers",
     "webhooks",
     "email",
     "data-model",
