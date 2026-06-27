@@ -1,0 +1,80 @@
+---
+title: Artifact REST API
+description: Push artifacts into SupaNet from anywhere with a simple HTTP API.
+---
+
+You can push artifacts into SupaNet from anywhere — a script, a scheduled task, a
+Zap, another app — without needing to use MCP or hold a Supabase session. The
+**Artifact REST API** is a plain HTTP API gated by a simple bearer token.
+
+## Why you might use it
+
+- **Integrate systems:** push blog posts, transcripts, reports, or any text into
+  SupaNet from another tool.
+- **Automate content ingestion:** a cron job can fetch data from an external source
+  and file it into a collection the team can chat with.
+- **Sync across platforms:** a script can keep artifacts in sync with an external
+  system (e.g., a knowledge base or documentation site).
+- **Non-Claude workflows:** any system that can make HTTP requests can push content
+  in. You do not need Claude or MCP; just curl, Zapier, n8n, or anything else that
+  speaks HTTP.
+
+## Authentication
+
+Get a personal **connection token** from **Settings → Connect Claude**. These are
+the same tokens used for MCP. Send it as a bearer token:
+
+```
+Authorization: Bearer <token>
+```
+
+Every call runs as the token's owner — you only ever see and modify your own
+artifacts. Revoke a token anytime to cut off access.
+
+## Basic use
+
+All requests go to:
+
+```
+https://<your-project>.supabase.co/functions/v1/artifacts
+```
+
+The four basic operations:
+
+- **Create** an artifact: `POST /artifacts` with title, content, and optional
+  collection names.
+- **List** your artifacts: `GET /artifacts` (with optional filters by collection,
+  type, or search term).
+- **Read** one: `GET /artifacts/:id` (includes the full content and collection tags).
+- **Update** one: `PATCH /artifacts/:id` (only the fields you send; collection tags
+  are additive).
+- **Delete** one: `DELETE /artifacts/:id`.
+
+## Collections
+
+Pass `collection` (a name or id) or `collections` (an array) on create or update to
+file the artifact into one or more **collections** — the same named groups you can
+chat with in SupaNet. If a collection does not exist, it is created automatically.
+Tag operations are additive: updating a tag does not remove existing tags; only the
+app UI lets you untag.
+
+## Visibility and sharing
+
+- **Private** (default): only you can see it.
+- **Unlisted** or **public**: you get back a `public_slug` and a link.
+- **HTML artifacts** also get a `share_url`: a standalone, full-screen page served
+  by SupaNet.
+
+## Types
+
+Artifacts can be:
+
+- `markdown` (default)
+- `code` (optionally with a `language` hint like `ts` or `py`)
+- `html`
+- `text`
+
+## Full reference
+
+See [Artifacts API reference](/docs/building/artifact-api-reference) for complete
+endpoint docs, error codes, and curl examples.

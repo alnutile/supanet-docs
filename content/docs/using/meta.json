@@ -5,6 +5,7 @@
     "index",
     "chat",
     "artifacts",
+    "artifact-api",
     "files-and-knowledge",
     "skills-and-prompts",
     "automation",

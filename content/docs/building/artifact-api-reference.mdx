@@ -1,0 +1,208 @@
+---
+title: Artifact API reference
+description: Complete reference for the REST CRUD API around artifacts.
+---
+
+The **Artifacts CRUD API** (`supabase/functions/artifacts`, deployed public) is a
+plain-REST interface for pushing artifacts in and out of SupaNet without MCP or
+holding a Supabase session. Every call is authenticated by a per-user **bearer
+token** (`mcp_tokens`), and the function runs as the token's owner with re-enforced
+ownership in code (using the service role + code checks, not RLS).
+
+## Base URL
+
+```
+https://<your-project>.supabase.co/functions/v1/artifacts
+```
+
+A bare `GET` with no `Authorization` header, or `GET /artifacts/docs`, returns
+plain-text documentation.
+
+## Endpoints
+
+| Method | Path | Purpose |
+| --- | --- | --- |
+| `GET` | `/artifacts` | List your artifacts (metadata by default). |
+| `POST` | `/artifacts` | Create an artifact. |
+| `GET` | `/artifacts/:id` | Read one (includes content and collections). |
+| `PATCH` \| `PUT` | `/artifacts/:id` | Update fields; add collection tags. |
+| `DELETE` | `/artifacts/:id` | Delete one. |
+
+## GET /artifacts — list
+
+Query parameters (all optional):
+
+| Param | Meaning |
+| --- | --- |
+| `collection` | Only artifacts in this collection (name or id). |
+| `type` | Filter by type: `markdown`, `code`, `html`, or `text`. |
+| `q` | Title contains (case-insensitive). |
+| `include=content` | Include the full content in each row (omitted by default). |
+| `limit` | 1–200, default 50. |
+| `offset` | Paging offset, default 0. |
+
+Response:
+
+```json
+{
+  "artifacts": [
+    {
+      "id": "…",
+      "title": "Hello",
+      "type": "markdown",
+      "language": null,
+      "visibility": "private",
+      "public_slug": null,
+      "share_url": null,
+      "created_at": "…",
+      "updated_at": "…"
+    }
+  ],
+  "count": 1
+}
+```
+
+## POST /artifacts — create
+
+JSON body:
+
+| Field | Required | Type | Notes |
+| --- | --- | --- | --- |
+| `title` | yes | string | |
+| `content` | yes | string | The artifact body. |
+| `type` | no | string | `markdown` (default), `code`, `html`, or `text`. |
+| `language` | no | string | Hint for code artifacts (e.g., `ts`, `py`). |
+| `visibility` | no | string | `private` (default), `unlisted`, or `public`. Non-private mints a `public_slug`. |
+| `collection` | no | string | Collection name or id (created if missing). |
+| `collections` | no | array | Array of collection names/ids (created if missing). |
+
+Returns `201` with the created artifact (including content and its collections).
+
+Example:
+
+```bash
+curl -X POST "https://<project>.supabase.co/functions/v1/artifacts" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "title": "My Blog Post",
+    "content": "# Hello\n\nThis is a post.",
+    "type": "markdown",
+    "collection": "Blog"
+  }'
+```
+
+## GET /artifacts/:id — read
+
+Returns the full artifact including `content` and the list of `collections` it
+belongs to.
+
+Example:
+
+```bash
+curl "https://<project>.supabase.co/functions/v1/artifacts/<id>" \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+Returns `404` if not found or not owned by the token's user.
+
+## PATCH /artifacts/:id (or PUT) — update
+
+Send only the fields you want to change:
+
+| Field | Type |
+| --- | --- |
+| `title` | string |
+| `content` | string |
+| `type` | string |
+| `language` | string |
+| `visibility` | string |
+
+Passing `collection` or `collections` **adds** the artifact to those collections.
+Existing tags are kept; this API cannot remove tags (use the app UI for that).
+Flipping `visibility` to non-private mints a share link if one did not exist.
+
+Returns the updated artifact.
+
+Example:
+
+```bash
+curl -X PATCH "https://<project>.supabase.co/functions/v1/artifacts/<id>" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"content": "# Updated", "visibility": "public"}'
+```
+
+## DELETE /artifacts/:id
+
+Deletes the artifact. Returns `{ "deleted": true, "id": "…" }`.
+
+Example:
+
+```bash
+curl -X DELETE "https://<project>.supabase.co/functions/v1/artifacts/<id>" \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+Returns `404` if not found or not owned by the token's user.
+
+## Errors
+
+All errors are JSON: `{ "error": "message" }` with an appropriate HTTP status:
+
+| Status | Meaning |
+| --- | --- |
+| `400` | Bad input (missing required field, invalid type, etc.). |
+| `401` | Missing or invalid bearer token. |
+| `404` | Artifact not found or not owned by the token's user. |
+| `405` | Wrong HTTP method or path (e.g., POST to `/artifacts/:id`). |
+| `500` | Server error. |
+
+## Collections
+
+A **collection** is a named group of artifacts you can chat with in SupaNet. When
+pushing artifacts via this API:
+
+- Reference by **name** (any string; created automatically if it does not exist) or
+  by **id** (UUID).
+- Collection tagging is **additive**: update operations add to existing tags, they
+  do not replace them.
+- To remove a tag, use the app UI.
+
+Collections respect workspace membership: a collection you create is private by
+default, but it can be shared with the workspace if you mark it shared in the UI.
+
+## Sharing and public links
+
+Setting `visibility` to `unlisted` or `public` mints a `public_slug`:
+
+- For **HTML artifacts**: you also get a `share_url` — a full-screen page served
+  by SupaNet at that URL. Link it directly.
+- For **other types**: build the in-app link yourself:
+  `https://<app-origin>/share/a/<public_slug>`.
+
+Private artifacts are never exposed this way.
+
+## Authentication note
+
+The bearer token is a personal connection token (`mcp_tokens`). Treat it like a
+password:
+
+- Rotate it if leaked.
+- Revoke it anytime from Settings → Connect Claude.
+- Requests are authenticated at the token → owner level; the function runs with the
+  service role and re-enforces ownership in code.
+
+## CORS
+
+The API ships with permissive CORS headers. You can call it from a browser.
+
+```
+Access-Control-Allow-Origin: *
+Access-Control-Allow-Methods: GET, POST, PATCH, PUT, DELETE, OPTIONS
+```
+
+## Examples
+
+See [Artifact API](/docs/using/artifact-api) for use-case examples and typical
+workflows.
