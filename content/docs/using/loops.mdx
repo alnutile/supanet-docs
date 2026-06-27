@@ -1,0 +1,82 @@
+---
+title: Loops
+description: Run agents iteratively against a goal and a feedback signal until they reach a target or hit a budget.
+---
+
+A **loop** is a goal-directed agent run that keeps iterating and refining until either
+it reaches a target quality, runs out of budget, or hits an iteration limit. Unlike a
+regular chat or scheduled agent that runs once and stops, a loop gives you feedback
+after each candidate and lets the agent keep improving.
+
+## Why loops matter
+
+One-shot agent runs are fast but often rough. A loop trades a bit of time and money
+for **measurable, directed improvement** — the agent proposes a solution, you or a tool
+scores it, and it refines based on that feedback. This works because grounding an agent
+in real measurements beats just asking it to "try again."
+
+## How a loop works
+
+1. You set a **goal** — what you want the agent to achieve.
+2. You pick a **feedback tool** — something that scores the agent's attempt. This can be
+   a simple Forge function, an external eval, or even an LLM-based judge.
+3. You set **stopping criteria** — how many iterations to allow, how much money to spend,
+   or an optional target score that signals "good enough."
+4. The agent proposes a candidate, the feedback tool scores it, and the score feeds into
+   the next iteration. Repeat until any stopping condition fires.
+5. The loop keeps the **best candidate** it saw and reports it alongside the cost and
+   stop reason.
+
+## Running a loop
+
+You create a loop on the **Loops** page (under Agents in the sidebar). Name it, describe
+the goal, pick the agent and feedback tool, and set your budget and iteration limit.
+Then hit **Run**.
+
+The run starts immediately and streams progress live on the screen — you see each
+iteration's score and the running cost meter as it approaches your budget cap. You can
+watch it finish, or **close the page and check back later** — the loop runs in the
+background and continues whether you are watching or not. The activity feed records the
+outcome.
+
+## Stopping criteria
+
+A loop stops the moment *any* of these fires:
+
+- **Budget hit** — you spent `$X`; the loop stops rather than risk another iteration.
+- **Iteration limit** — you set `N` iterations max; it stops at the Nth proposal.
+- **Agent converged** — the agent can signal it is done refining by calling the
+  `loop_done` tool (a built-in); it is an explicit signal, not a guess.
+- **Target reached** — if you set an optional target score (e.g., "I want at least
+  80/100"), the loop stops as soon as the best score hits it.
+- **Error** — something went wrong; the loop records the error and stops.
+
+Whichever happens first wins. The run records which one it was (`stop_reason`).
+
+## What a loop produces
+
+When a loop finishes, you get:
+
+- **The best candidate** — the highest-scoring proposal across all iterations.
+- **The final score** and the iteration count.
+- **Total cost** — how much it spent of your budget.
+- **The transcript** — a log of each iteration: what the agent tried, what the feedback
+  was, and how much each iteration cost.
+
+This is all visible in the run detail view and in the activity feed.
+
+## When to use loops vs. regular agents
+
+- **One-shot agents** (chat or scheduled) — you want a quick answer and precision does not
+  matter much.
+- **Loops** — you care about the quality of the output (e.g., "make this code as fast as
+  possible" or "refine this copy until it converts better") and you have a feedback
+  signal (a test suite, an eval, a metric) to measure it.
+
+If you do not have a feedback tool yet, ask whoever runs your workspace — they can build
+one as a Forge function.
+
+## Running loops on a schedule
+
+Just like agents, a loop can run on a schedule — "every morning, optimize this report."
+Set it up in the loop editor under **Schedule**.

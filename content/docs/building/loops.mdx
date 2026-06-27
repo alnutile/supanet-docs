@@ -1,0 +1,111 @@
+---
+title: Loops
+description: Goal-directed agent runs with measured feedback, budget caps, and background execution.
+---
+
+A **loop** is a control structure that wraps an agent in a feedback-driven iteration.
+Instead of a one-shot prompt-and-answer, the loop runs the agent many times — each time
+feeding back a numeric score and optional detail — and halts when a stopping criterion
+fires (budget, iterations, agent convergence, or target score reached).
+
+## Design
+
+A loop binds:
+
+- An **agent** (`agent_id`) — reuses the existing system prompt + `tool_ids`.
+- A **feedback tool** (`feedback_tool_id`) — an optional `tools` row (`kind='http'`)
+  that takes the agent's candidate and returns `{score, detail}`. If no feedback tool
+  is set, the loop still iterates but relies only on the agent calling `loop_done` or
+  a hard stop condition.
+- **Stopping criteria** — `max_iterations`, `budget_usd`, optional `target_score`, and
+  the agent signaling convergence via `loop_done`.
+
+The runner:
+
+1. Initializes context with the loop's goal and an explanation of the protocol.
+2. Checks the budget gate (fail-closed: unreadable cost counts as spending the cap).
+3. Runs one agent turn through the existing tool loop (reusing the model → tools → model
+   cycle from chat).
+4. Records the cost via `recordUsage` (with `context: 'loop'`).
+5. POSTs the candidate to the feedback tool (if configured), reads `{score, detail}`,
+   appends the detail to the dialogue, and updates `best_score` / `best_output`.
+6. Checks for convergence, target reached, or budget/iteration limits.
+7. Repeats until a stop condition fires, then finalizes the `loop_runs` row and writes
+   an `activity_log` entry.
+
+## Background execution
+
+The `loop` edge function (`supabase/functions/loop/index.ts`) runs in the background
+using `EdgeRuntime.waitUntil`. The request returns immediately with a `202 Accepted`
+response and the run ID, while the loop executes as a background task. This avoids
+hitting the 150s request idle timeout on the free tier (or 400s on paid).
+
+### Wall-clock gate
+
+The loop internally tracks elapsed wall-clock time and self-stops **before** the platform
+kills the worker (default: 130s out of 150s free / 400s paid, overridable via
+`LOOP_MAX_WALL_MS`). When the time limit is reached, the loop finalizes gracefully with
+`stop_reason='time'` and records the best result so far.
+
+### Worker shutdown hook
+
+An `addEventListener('beforeunload')` handler keeps track of active runs and finalizes
+any still in flight when the worker is retired early. This is a best-effort fallback;
+the in-loop wall-clock self-stop is the primary guarantee.
+
+## UI integration
+
+The **Loops** page (`LoopsPage`) lists loops and shows a detail view for each. A **Run**
+button starts a new run, which streams progress live (iteration, score, cost meter).
+Users can close the page and check back; Realtime subscriptions keep the transcript in
+sync if they return.
+
+A cost meter (progress bar) visualizes spending against the budget cap, turning red as
+it approaches the limit.
+
+## Stop reasons
+
+The `loop_runs.stop_reason` enum includes:
+
+- `budget` — spending hit the `budget_usd` cap.
+- `max_iterations` — reached the iteration limit.
+- `converged` — agent called `loop_done`.
+- `target_reached` — best score ≥ `target_score`.
+- `time` — wall-clock limit reached (background execution timeout).
+- `error` — an exception occurred.
+
+## Built-in tools
+
+**`loop_done`** — a no-op tool seeded as `is_builtin`. The agent calls it to signal
+that further refinement is unlikely. The runner detects this call and stops with
+`converged`.
+
+## Security & RLS
+
+`loops` and `loop_runs` tables mirror the `agents` / `tools` RLS pattern:
+
+- `loops` is readable by the owner, members when `visibility='workspace'`, and admins.
+- `loop_runs` inherits the parent loop's visibility.
+- The runner executes as the service role but **re-enforces the caller's identity** when
+  calling the feedback tool (same discipline as shared builtins).
+- Guardrails (pre-flight checks) screen the loop's goal before execution.
+
+## Usage tracking
+
+Each model call in a loop records `recordUsage` with `context: 'loop'`. The `/usage`
+page then breaks down spending by loop, like any other context.
+
+## Integration
+
+- **Scheduling:** a `schedules` row can target a loop via `loop_id`, so loops can run on
+  a cron tick (same pattern as scheduled agents).
+- **Best-of-K:** The schema reserves room for `runs > 1` (multi-attempt loops), but v1
+  ships with single-run only (`K=1`). Multi-run is a natural follow-up.
+
+## Why this pattern
+
+Grounding an agent in a closed feedback loop — where it gets real, measured signal and
+iterates — produces better results than a single pass. The price cap makes it safe to
+automate: "spend up to $5 trying to get this right, then stop" is a control non-engineers
+can understand. By reusing agents, the tool loop, and usage accounting, the loop layer
+is thin and composable.

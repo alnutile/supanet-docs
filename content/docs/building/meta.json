@@ -6,6 +6,7 @@
     "architecture",
     "deploy",
     "agents",
+    "loops",
     "tools",
     "artifact-api-reference",
     "forge",
