@@ -1,0 +1,48 @@
+---
+title: API Area
+description: Find API docs, generate tokens, and copy ready-to-run examples inside SupaNet.
+---
+
+The **API area** is a built-in hub where you can explore SupaNet's REST APIs, manage your connection tokens, and copy paste-ready examples without leaving the app.
+
+## Why it matters
+
+Instead of hunting for docs in a browser tab or copy-pasting tokens by hand, everything you need to call SupaNet's APIs is in one place:
+
+- **Quick reference** - endpoints, request formats, and field docs.
+- **Live tokens** - pick an existing token or create a new one on the spot.
+- **Ready-to-run examples** - copy a curl command that already has your token baked in.
+- **No context switching** - all inside SupaNet; no external docs to flip between.
+
+## Getting there
+
+In the sidebar, look for **Connections → API** (or just visit `/api`).
+
+## What you can do
+
+### Explore endpoints
+
+Each API surface (Artifacts, and more coming) is shown as a tab. For each, you see:
+
+- **Base URL** - where to send requests.
+- **HTTP methods and paths** - GET, POST, PATCH, DELETE, and what each does.
+- **Query parameters** - filters for list operations.
+- **Request body fields** - what to send on create and update, with notes.
+
+### Pick or create a token
+
+At the top, under **Authentication**, choose which of your connection tokens to use in the examples. If you don't have one yet, hit **New token** to create one on the spot — it appears in the dropdown right away and is ready to paste.
+
+All tokens are the same ones you use in **Settings → Connect Claude** for MCP; you only see and can revoke your own.
+
+### Copy examples
+
+Scroll to **Examples** and copy any curl snippet. If you picked a token above, it's already in the command — just paste it into your terminal or script.
+
+The examples show real-world flows: creating an artifact with a collection tag, listing by collection, reading one, updating, and deleting.
+
+## Currently available
+
+- **Artifacts API** - create, list, read, update, delete artifacts and file them into collections. Same as the REST API you'd use from scripts or Zapier, but right here with live tokens.
+
+More API surfaces coming soon.

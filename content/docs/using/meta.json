@@ -6,6 +6,7 @@
     "chat",
     "artifacts",
     "artifact-api",
+    "api",
     "files-and-knowledge",
     "skills-and-prompts",
     "automation",
