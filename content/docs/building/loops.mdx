@@ -80,6 +80,13 @@ The `loop_runs.stop_reason` enum includes:
 that further refinement is unlikely. The runner detects this call and stops with
 `converged`.
 
+**Loop management tools** (`start_loop`, `check_loop`, `list_loops`) — seeded as
+`is_builtin` and dispatched by `_shared/builtins.ts` so all three agent loops (chat,
+scheduler, webhook) get them. An admin can toggle them on ToolsPage, they respect
+per-agent `tool_ids` scoping, and the `webhooks.allow_tools` gate still applies.
+`start_loop` is exfiltration-adjacent (model budget spend) so admins can deactivate it
+if they don't want the assistant kicking off loops.
+
 ## Security & RLS
 
 `loops` and `loop_runs` tables mirror the `agents` / `tools` RLS pattern:
@@ -94,6 +101,21 @@ that further refinement is unlikely. The runner detects this call and stops with
 
 Each model call in a loop records `recordUsage` with `context: 'loop'`. The `/usage`
 page then breaks down spending by loop, like any other context.
+
+## Entry points
+
+The loop runner (`supabase/functions/loop/index.ts`) accepts runs from three entry points:
+
+1. **UI** — a user clicks Run on the Loops dashboard; the browser holds a JWT with `sub = auth.uid()`.
+2. **MCP server** — an external Claude calls `run_loop`; the request comes through the service-role
+   key (no `sub`) and passes the acting user via the `triggered_by` parameter.
+3. **Builtins** — the in-app chat assistant calls `start_loop`; same service-role context, same
+   `triggered_by` mechanism.
+
+The function extracts the user ID from the JWT `sub` if present (it always wins), else falls back
+to the explicit `triggered_by` parameter. This ensures a member cannot spoof another user: their
+own JWT always takes precedence, and the service-role caller's explicit parameter is honored only
+when there is no JWT `sub`.
 
 ## Integration
 

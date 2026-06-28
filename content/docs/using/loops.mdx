@@ -76,6 +76,22 @@ This is all visible in the run detail view and in the activity feed.
 If you do not have a feedback tool yet, ask whoever runs your workspace — they can build
 one as a Forge function.
 
+## Running loops from the chat assistant
+
+The in-app chat assistant can also create and manage loops without visiting the Loops
+page. Use these built-in tools:
+
+- **`start_loop`** — create and run a loop in one shot. Give it a goal (the optimization
+  prompt) and a rubric (how to grade candidates 0–100). Optionally set a budget, iteration
+  cap, target score, or pick a specific agent. Returns a run ID.
+- **`check_loop`** — check on a running or finished loop. Pass the run ID from `start_loop`,
+  or a loop name/id to see its latest run. Shows status, iterations, cost, best score, and
+  (when done) the best output.
+- **`list_loops`** — list the loops you can run (yours and any workspace-shared ones).
+
+This means you can ask the assistant "iterate on this prompt against these test cases until
+you get 90/100" and it will kick off a loop, monitor it, and report results — all in chat.
+
 ## Running loops on a schedule
 
 Just like agents, a loop can run on a schedule — "every morning, optimize this report."

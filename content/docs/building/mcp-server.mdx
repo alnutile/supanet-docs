@@ -43,8 +43,17 @@ The server exposes build tools so an outside Claude can populate your workspace:
 - `create_artifact`
 - the matching `list_*` tools
 
+It also exposes the **looping system** so you can create and run goal-directed loops from
+an external Claude:
+
+- `create_loop` — create a reusable loop (a goal + rubric + agent + feedback tool).
+- `run_loop` — start a run of an existing loop.
+- `get_loop_run` — check on a running or finished loop run.
+- `list_loops` — list the loops you can run.
+
 In practice this means you can sit in Claude on your laptop, describe an agent or
-a tool, and have it appear in SupaNet ready to use.
+a tool, and have it appear in SupaNet ready to use. You can also kick off goal-directed
+runs with feedback and monitor them until they finish.
 
 ## The artifact angle
 
