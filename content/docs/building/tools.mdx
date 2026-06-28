@@ -43,10 +43,19 @@ By default the loop loads all active tools. But callers can restrict the set:
 
 ## Built-in tools
 
-Some tools are seeded and shared across every loop through a common module - for
-example `search_documents` (the PDF knowledge search) and the email tools
-`send_email` / `check_email`. Built-ins follow the same rules as any tool: admin
-activation, per-agent scoping, and the webhook gate all still apply.
+Some tools are seeded and shared across every loop through a common module. Common
+examples include:
+
+- **`search_documents`** - search the team's knowledge base (PDFs and notes).
+- **`send_email` / `check_email`** - send and receive email (when email is configured).
+- **`create_artifact` / `list_collections` / `create_collection` / `add_to_collection`** - create
+  and organize shareable artifacts and collections, so the assistant can file fetched
+  articles or documents into a collection your team can chat with.
+- **`add_note`** - add text notes (articles, transcripts, docs) directly to your
+  workspace knowledge base so they become searchable via `search_documents`.
+
+Built-ins follow the same rules as any tool: admin activation, per-agent scoping,
+and the webhook gate all still apply.
 
 ## When to reach for a tool vs Forge
 
