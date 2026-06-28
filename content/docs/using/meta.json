@@ -6,6 +6,7 @@
     "chat",
     "artifacts",
     "artifact-api",
+    "todos",
     "api",
     "files-and-knowledge",
     "secrets-vault",

@@ -1,0 +1,279 @@
+---
+title: To-dos REST API Reference
+description: Complete reference for the To-dos CRUD API.
+---
+
+The **To-dos REST API** is a plain HTTP API for creating, reading, updating, and
+deleting to-dos from anywhere — a script, a cron job, a Zap, or another application.
+It mirrors the [Artifacts REST API](/docs/building/artifact-api-reference) and shares
+the same authentication model.
+
+## Authentication
+
+Send a personal **connection token** as a bearer token in the `Authorization` header:
+
+```
+Authorization: Bearer <token>
+```
+
+Get a token from **Settings → Connect Claude** (the same token used for MCP and the
+Artifacts API). Every call runs as the token's owner — you only ever see and modify
+your own to-dos. Revoke a token anytime in Settings to cut off access.
+
+## Base URL
+
+```
+https://<your-project>.supabase.co/functions/v1/todos
+```
+
+A bare `GET /todos` with no `Authorization` header (or `GET /todos/docs`) returns this
+documentation as plain text.
+
+## Endpoints
+
+| Method | Path | Description |
+| --- | --- | --- |
+| GET | `/todos` | List your to-dos (with optional filters and paging). |
+| POST | `/todos` | Create a to-do. |
+| GET | `/todos/:id` | Read one to-do (with its collections). |
+| PATCH / PUT | `/todos/:id` | Update fields you send; collection tags are added. |
+| DELETE | `/todos/:id` | Delete one to-do. |
+
+## GET /todos — List your to-dos
+
+Returns all your to-dos (respecting your visibility settings). Supports filtering,
+sorting, and paging.
+
+**Query parameters:**
+
+- `collection=<name|id>` — filter to to-dos in this collection (by name or ID).
+- `status=open|done` — `open` for incomplete, `done` for completed.
+- `q=<text>` — search by title (case-insensitive substring match).
+- `sort=position|due` — `position` (default, your manual drag order) or `due` (by due date).
+- `limit=<1-200>` (default 100) — items per page.
+- `offset=<n>` (default 0) — pagination offset.
+
+**Response (200 OK):**
+
+```json
+{
+  "todos": [
+    {
+      "id": "550e8400-e29b-41d4-a716-446655440000",
+      "title": "Ship the feature",
+      "notes": "Include tests and docs",
+      "due_date": "2026-07-15",
+      "done": false,
+      "completed_at": null,
+      "position": 0,
+      "visibility": "private",
+      "created_at": "2026-06-28T10:30:00Z",
+      "updated_at": "2026-06-28T10:30:00Z"
+    }
+  ],
+  "count": 1
+}
+```
+
+**Field meanings:**
+
+- `id` — unique identifier.
+- `title` — the task description.
+- `notes` — optional details or sub-tasks.
+- `due_date` — optional deadline (YYYY-MM-DD format).
+- `done` — whether the task is completed.
+- `completed_at` — timestamp when marked done (null if still open).
+- `position` — manual sort order (used by default in the UI).
+- `visibility` — `private` (you only) or `workspace` (everyone).
+- `created_at`, `updated_at` — timestamps.
+
+## POST /todos — Create a to-do
+
+Creates a new to-do. Returns `201 Created` with the created to-do and its collections.
+
+**Request body:**
+
+```json
+{
+  "title": "Ship the feature",           // required
+  "notes": "Include tests and docs",     // optional
+  "due_date": "2026-07-15",              // optional, YYYY-MM-DD format
+  "done": false,                          // optional (default false)
+  "visibility": "private",               // private (default) | workspace
+  "collection": "Work",                  // optional: name or ID — created if missing
+  "collections": ["Work", "Q3"]          // optional: array of names or IDs
+}
+```
+
+**Response (201 Created):**
+
+```json
+{
+  "id": "550e8400-e29b-41d4-a716-446655440000",
+  "title": "Ship the feature",
+  "notes": "Include tests and docs",
+  "due_date": "2026-07-15",
+  "done": false,
+  "completed_at": null,
+  "position": 0,
+  "visibility": "private",
+  "created_at": "2026-06-28T10:30:00Z",
+  "updated_at": "2026-06-28T10:30:00Z",
+  "collections": ["Work", "Q3"]
+}
+```
+
+If `collection` or `collections` is provided, the to-do is filed into those collections
+(created automatically if they don't exist).
+
+## GET /todos/:id — Read one to-do
+
+Returns the to-do and a list of collections it belongs to.
+
+**Response (200 OK):**
+
+```json
+{
+  "id": "550e8400-e29b-41d4-a716-446655440000",
+  "title": "Ship the feature",
+  "notes": "Include tests and docs",
+  "due_date": "2026-07-15",
+  "done": false,
+  "completed_at": null,
+  "position": 0,
+  "visibility": "private",
+  "created_at": "2026-06-28T10:30:00Z",
+  "updated_at": "2026-06-28T10:30:00Z",
+  "collections": ["Work", "Q3"]
+}
+```
+
+## PATCH /todos/:id — Update a to-do
+
+Updates only the fields you send. Collection tags are **additive** — passing
+`collection` or `collections` adds them to the existing tags; it does not replace
+them. Only the UI supports removing tags.
+
+**Request body (any combination of fields):**
+
+```json
+{
+  "title": "Update the feature",         // optional
+  "notes": "Add more context",           // optional
+  "due_date": "2026-07-20",              // optional, or null to clear
+  "done": true,                           // optional — true marks it complete
+  "position": 5,                          // optional — manual sort order
+  "visibility": "workspace",             // optional — private or workspace
+  "collection": "Work",                  // optional — adds to collections
+  "collections": ["Q3"]                  // optional — adds these collections
+}
+```
+
+**Response (200 OK):** the updated to-do with its full collections list.
+
+**Note:** `done: true` automatically stamps `completed_at` with the current timestamp.
+`done: false` clears `completed_at`.
+
+## DELETE /todos/:id — Delete a to-do
+
+Deletes the to-do.
+
+**Response (200 OK):**
+
+```json
+{
+  "deleted": true,
+  "id": "550e8400-e29b-41d4-a716-446655440000"
+}
+```
+
+## Errors
+
+All errors are JSON with an appropriate HTTP status:
+
+```json
+{
+  "error": "Not found"
+}
+```
+
+| Status | Meaning |
+| --- | --- |
+| 400 | Invalid request body or parameters. |
+| 401 | Missing or invalid bearer token. |
+| 404 | To-do not found. |
+| 500 | Server error. |
+
+## Collections
+
+Collections are named groups (the same ones you chat with in SupaNet). Pass a collection
+**name** (created if missing) or **ID** on create or update:
+
+- `collection: "Work"` — a single collection by name.
+- `collections: ["Work", "Q3"]` — multiple collections by name.
+- `collection: "550e8400-e29b-41d4-a716-446655440001"` — by ID.
+
+Collections are additive on update — adding a collection does not remove existing ones.
+
+## Visibility
+
+- **private** (default) — only you (and workspace admins) can see the to-do.
+- **workspace** — everyone on your team can see it and collaborate (check it off, edit
+  title/notes, reorder).
+
+## Examples
+
+### Create a to-do due next week in the "Work" collection
+
+```bash
+curl -X POST "https://<project>.supabase.co/functions/v1/todos" \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "title": "Ship the feature",
+    "due_date": "2026-07-15",
+    "collection": "Work"
+  }'
+```
+
+### List open to-dos in "Work", sorted by due date
+
+```bash
+curl "https://<project>.supabase.co/functions/v1/todos?collection=Work&status=open&sort=due" \
+  -H "Authorization: Bearer <token>"
+```
+
+### Mark a to-do done
+
+```bash
+curl -X PATCH "https://<project>.supabase.co/functions/v1/todos/<id>" \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{"done": true}'
+```
+
+### Search for a to-do by title
+
+```bash
+curl "https://<project>.supabase.co/functions/v1/todos?q=ship" \
+  -H "Authorization: Bearer <token>"
+```
+
+### Update a to-do and add a collection
+
+```bash
+curl -X PATCH "https://<project>.supabase.co/functions/v1/todos/<id>" \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "notes": "Include end-to-end tests",
+    "collections": ["Q3", "Roadmap"]
+  }'
+```
+
+### Delete a to-do
+
+```bash
+curl -X DELETE "https://<project>.supabase.co/functions/v1/todos/<id>" \
+  -H "Authorization: Bearer <token>"
+```

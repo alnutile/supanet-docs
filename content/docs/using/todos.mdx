@@ -1,0 +1,74 @@
+---
+title: To-dos
+description: Capture tasks, organize them into collections, and check them off.
+---
+
+A **to-do** is a task you want to track. SupaNet gives you a simple task list where
+you can create to-dos, assign due dates, organize them into collections, and check
+them off as you complete them.
+
+## Why to-dos are useful
+
+To-dos are a lightweight way to capture work without leaving SupaNet. You can:
+
+- **Capture tasks** with a title and optional notes.
+- **Set due dates** to stay on top of deadlines.
+- **Organize into collections** — group related tasks so the assistant can access them
+  as context when you chat.
+- **Check them off** as you complete work.
+- **Reorder manually** by dragging tasks to match your priorities.
+- **Share with your team** — mark a task as workspace-visible so everyone can
+  collaborate, check off their own copies, and see updates in real time.
+
+## Where to find your to-dos
+
+On the sidebar under **Assets**, select **To-dos**. You'll see all your tasks in
+a list, with options to create, edit, and delete them.
+
+## Creating and editing to-dos
+
+Click **New to-do** to create one. You can set:
+
+- **Title** (required) — what you need to do.
+- **Notes** (optional) — extra context or a checklist within the task.
+- **Due date** (optional) — when you want it done.
+- **Visibility** — private (only you) or workspace (the whole team can see and edit it).
+
+Edit a task anytime by clicking it in the list. Mark it done by checking the checkbox
+next to its title.
+
+## Sorting and filtering
+
+Use the sort toggle to order tasks by:
+
+- **Position** (default) — your manual drag-and-drop order.
+- **Due date** — earliest deadlines first.
+
+## Collections and chat context
+
+You can file tasks into **collections** — the same named groups you use for artifacts.
+On the To-dos page, multi-select tasks and click **Add to collection** to file them.
+
+When you use a collection in Chat (via the 📚 picker), the assistant has access to both
+the artifacts and the to-dos in that collection. This lets you give the assistant a full
+picture of the work — documentation, code, and tasks all in one place.
+
+## Sharing and collaboration
+
+- **Private tasks** — only you (and admins) can see or edit them.
+- **Workspace tasks** — everyone on your team can see them, check them off, edit the
+  title or notes, and reorder them.
+
+When a task is workspace-visible, your team sees live updates whenever anyone checks it
+off or changes it.
+
+## REST API and automation
+
+Like artifacts, to-dos have a **REST API** so you can create, list, update, and delete
+tasks from anywhere — a script, a cron job, a Zap, or another app — without touching
+the UI. See [To-dos REST API](/docs/building/todos-api-reference) for full details.
+
+Your assistant and MCP can also manage to-dos: they can create tasks, list them, mark
+them complete, and file them into collections as part of a larger workflow. For example,
+an agent can summarize a meeting transcript and automatically file the action items as
+tasks in a "Meetings" collection your team can chat with.
