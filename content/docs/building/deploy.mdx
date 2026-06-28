@@ -48,13 +48,57 @@ These are read at **build time**, so they must exist before `npm run build`.
 
 ## Database
 
-The schema lives in `supabase/migrations` (base migration plus later ones). If
-you change the schema: update the migration, apply it, regenerate the types with
-`npm run gen:types`, and re-check the Supabase security advisors.
+The schema lives in `supabase/migrations` as sequentially-numbered SQL files
+(`0001_init.sql`, `0002_skills.sql`, …). They are the single source of truth: a
+fresh project becomes a working backend with one `supabase db push`, and from
+then on you never apply migrations by hand.
+
+### How new migrations go live
+
+A GitHub Action (`.github/workflows/deploy-migrations.yml`) runs `supabase db push`
+whenever a file under `supabase/migrations/` lands on `main`. The CLI only applies
+what's pending (the remote tracks applied versions), so merging a PR that adds a new
+migration file applies exactly that file — no manual step, safe to re-run.
+
+To set this up, add two repository secrets (**Settings → Secrets and variables →
+Actions**):
+
+| Secret | What |
+| --- | --- |
+| `SUPABASE_ACCESS_TOKEN` | A Supabase personal access token (Dashboard → Account → Access Tokens) — the same one the functions workflow uses. |
+| `SUPABASE_DB_PASSWORD` | Your project's database password (Dashboard → Project Settings → Database). `db push` connects straight to Postgres, so the token alone isn't enough. |
+
+The project ref defaults in the workflow and is overridable with a repository
+**variable** `SUPABASE_PROJECT_REF`.
+
+### Adding a migration
+
+```bash
+# 1. Create the next sequential file (keep numbers unique and contiguous).
+#    Write it idempotently where practical (create … if not exists, drop … if exists).
+$EDITOR supabase/migrations/0040_my_change.sql
+
+# 2. (Optional) try it locally / against your linked project before merging.
+supabase db push
+
+# 3. Refresh the typed client and open a PR.
+npm run gen:types
+```
+
+Merging the PR to `main` triggers the Action, which applies it to the live database.
+
+> **One rule:** every migration filename must have a **unique** numeric prefix. Two
+> files sharing a number (e.g. two `0032_*.sql`) collide — `db push` derives the
+> version from the prefix and will refuse the push. Always use the next free number.
+
+### Fresh project notes
 
 On a brand-new project the `storage` schema can lag a few seconds. If applying
 the full migration fails on `storage.buckets`, apply the core tables first, then
 the storage section.
+
+If you change the schema locally: refresh the typed client with
+`npm run gen:types` and re-check the Supabase security advisors.
 
 ## Auth redirects
 
@@ -64,26 +108,15 @@ point at localhost.
 
 ## Automatic deployments
 
-The repo ships with GitHub Actions that auto-deploy from `main`:
+Pushing to `main` updates everything automatically:
 
-**Frontend and edge functions:** pushing to `main` rebuilds the frontend
-(Railway) and redeploys edge functions to Supabase.
+- **Frontend:** Railway rebuilds the app from the latest commit.
+- **Edge functions:** a GitHub Action redeploys any function that changed.
+- **Database migrations:** a separate Action applies any new migration files (see
+  [Database](#database) above).
 
-**Database migrations:** a separate workflow (`deploy-migrations.yml`) runs
-`supabase db push` whenever a file under `supabase/migrations/` changes on
-`main`. This automatically applies new migrations to your database - no manual
-step needed. The Supabase CLI tracks what is already applied, so re-runs only
-deploy pending migrations.
-
-To set up migration deploys, add two repository secrets:
-
-- `SUPABASE_ACCESS_TOKEN` - a Supabase personal access token (reuse the same one
-  you use for function deploys).
-- `SUPABASE_DB_PASSWORD` - your project's database password. Migrations need this
-  because they connect straight to Postgres; the access token alone is not enough.
-
-The workflow respects the `SUPABASE_PROJECT_REF` repository variable (your
-project ID), defaulting to the one in `config.toml` if not set.
+After the one-time setup of secrets and environment variables, you never run
+`supabase` commands by hand.
 
 ## Workflow
 
