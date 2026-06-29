@@ -28,9 +28,11 @@ The same agent can run in three contexts:
 - **From a webhook.** A webhook can target an agent, so an incoming payload is
   run through the agent's prompt and tools instead of a bare prompt. See
   [Webhooks](/docs/building/webhooks).
-- **On a schedule.** A `schedules` row pairs an agent with an input and an
-  interval. A `scheduler` edge function, ticked once a minute by `pg_cron`, runs
-  due schedules. You manage schedules inside the agent editor.
+- **On a schedule.** A `schedules` row pairs an agent with an interval and an
+  optional input. A `scheduler` edge function, ticked once a minute by `pg_cron`,
+  runs due schedules. Each run uses the agent's own instructions; the optional input
+  can add extra direction for that specific run. You manage schedules inside the agent
+  editor.
 
 ## Collections bound to an agent
 
