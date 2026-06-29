@@ -1,0 +1,97 @@
+---
+title: Collections
+description: Group artifacts, files, and to-dos to chat with a focused set.
+---
+
+A **collection** is a named group of artifacts, files, and to-dos that you can
+chat with all at once. Instead of searching through everything, you pick a
+collection and the assistant has access to just what matters for that task.
+
+## Why collections are useful
+
+Collections let you organize your workspace by project, topic, or workflow. You
+can:
+
+- **Group related items** — keep artifacts, files, and tasks together.
+- **Chat with a focused set** — pick one or more collections in Chat, and the
+  assistant has access to everything in them.
+- **See what's inside** — the Collections page shows you exactly what you've
+  collected and how much context it uses.
+- **Share with your team** — mark a collection as workspace-visible so everyone
+  can see it and add items to it.
+
+## Finding collections
+
+On the sidebar under **Assets**, select **Collections**. You'll see a list of
+all your collections on the left, and when you pick one, its contents appear on
+the right.
+
+## Creating a collection
+
+Click **New** on the Collections page to create an empty collection. You can
+also create one inline from the Artifacts, Files, or To-dos pages — select items
+and use the **Add to collection** bar to file them and pick or create a
+collection at the same time.
+
+## Managing a collection
+
+When you select a collection, click **Manage** to:
+
+- **Rename it** — edit the name.
+- **Add a description** — optional, for your own reference.
+- **Share it** — toggle **Share with the workspace** to let everyone on your
+  team see it and add items to it.
+- **Delete it** — remove the collection itself (the items inside are kept).
+
+## What's inside
+
+The detail pane groups a collection's contents by type:
+
+- **Artifacts** — documents, code, and web pages.
+- **Files** — PDFs, images, and other uploads.
+- **To-dos** — tasks and checklists.
+
+Click an item to jump to its own page. Click the **✕** icon to remove an item
+from the collection without deleting it.
+
+## Using collections in Chat
+
+In the Chat page, use the **📚** picker to select one or more collections. The
+assistant then has access to:
+
+- All **artifacts** in those collections (the full text).
+- All **files** — PDFs are searched by their indexed chunks, text files are
+  inlined, and images/binaries are skipped.
+- All **to-dos** — shown as a checklist so the assistant knows what work is
+  planned.
+
+If you pick multiple collections, overlapping items are counted once (no
+duplication), and the picker shows you the combined size so you can see how much
+context you're using.
+
+## Collections and visibility
+
+- **Private** — only you (and admins) can see it.
+- **Workspace** — everyone on your team can see the collection, view its
+  contents, and add new items to it.
+
+Visibility is set at the collection level. Individual items within a collection
+keep their own visibility settings, but the collection itself gates who can
+access the whole group.
+
+## Adding items to a collection
+
+You can add items to a collection from anywhere:
+
+- **From Artifacts:** multi-select artifacts and click **Add to collection**.
+- **From Files:** multi-select files and click **Add to collection**.
+- **From To-dos:** multi-select tasks and click **Add to collection**.
+- **When creating:** the assistant can create artifacts and file them into a
+  collection automatically as part of a larger task.
+
+## Context size
+
+At the top of the collection detail, you'll see an estimated token count and a
+meter showing what percentage of your chat model's context window this collection
+uses. This helps you judge whether adding another collection will fit in your
+model's window.

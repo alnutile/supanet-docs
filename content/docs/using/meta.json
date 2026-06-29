@@ -5,6 +5,7 @@
     "index",
     "chat",
     "artifacts",
+    "collections",
     "artifact-api",
     "todos",
     "api",
