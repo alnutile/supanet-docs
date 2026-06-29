@@ -12,8 +12,9 @@ so it can be run consistently from several places.
 An `agents` row holds:
 
 - a **name**,
-- **instructions** (its system prompt), and
-- **`tool_ids`** - the tools it may call.
+- **instructions** (its system prompt),
+- **`tool_ids`** - the tools it may call, and
+- **`collection_ids`** - the collections it has access to.
 
 The Agents page is the dashboard for creating and editing them. Agents are
 visible across the workspace.
@@ -30,6 +31,17 @@ The same agent can run in three contexts:
 - **On a schedule.** A `schedules` row pairs an agent with an input and an
   interval. A `scheduler` edge function, ticked once a minute by `pg_cron`, runs
   due schedules. You manage schedules inside the agent editor.
+
+## Collections bound to an agent
+
+When you bind collections to an agent, their contents — artifacts, files, and
+to-dos — are injected as primary context whenever the agent runs. This happens
+in all three contexts: chat, webhooks, and schedules. The user's manually picked
+collections (if any) are merged with the agent's bound collections.
+
+This is how you give an agent a persistent knowledge set. For example, an agent
+that processes incoming tickets can be bound to a collection of templates and
+guidelines it should follow every time it runs.
 
 ## Why scope tools per agent
 
