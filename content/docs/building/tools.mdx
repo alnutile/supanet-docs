@@ -53,6 +53,9 @@ examples include:
   articles or documents into a collection your team can chat with.
 - **`add_note`** - add text notes (articles, transcripts, docs) directly to your
   workspace knowledge base so they become searchable via `search_documents`.
+- **`list_tables` / `query_table` / `add_table_row` / `update_table_row` / `create_table`** - work
+  with user-created data tables. Create tables, query them for information, add rows, or update
+  existing rows. The model respects the same private/workspace visibility rules as the user.
 
 Built-ins follow the same rules as any tool: admin activation, per-agent scoping,
 and the webhook gate all still apply.
