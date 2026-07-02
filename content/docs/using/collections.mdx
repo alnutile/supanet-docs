@@ -1,10 +1,10 @@
 ---
 title: Collections
-description: Group artifacts, files, and to-dos to chat with a focused set.
+description: Group artifacts, files, tables, and to-dos on a dashboard, then chat with them.
 ---
 
-A **collection** is a named group of artifacts, files, and to-dos that you can
-chat with all at once. Instead of searching through everything, you pick a
+A **collection** is a named group of artifacts, files, to-dos, and tables that you
+can chat with all at once. Instead of searching through everything, you pick a
 collection and the assistant has access to just what matters for that task.
 
 ## Why collections are useful
@@ -12,11 +12,13 @@ collection and the assistant has access to just what matters for that task.
 Collections let you organize your workspace by project, topic, or workflow. You
 can:
 
-- **Group related items** — keep artifacts, files, and tasks together.
+- **Group related items** — keep artifacts, files, tables, and tasks together.
 - **Chat with a focused set** — pick one or more collections in Chat, and the
   assistant has access to everything in them.
+- **Chat with a collection directly** — use the floating chat bubble on a
+  collection's dashboard to ask questions about just that collection's content.
 - **See what's inside** — the Collections page shows you exactly what you've
-  collected and how much context it uses.
+  collected in a dashboard view with cards per content type, plus context size.
 - **Share with your team** — mark a collection as workspace-visible so everyone
   can see it and add items to it.
 
@@ -45,14 +47,16 @@ When you select a collection, click **Manage** to:
 
 ## What's inside
 
-The detail pane groups a collection's contents by type:
+The collection dashboard groups your content by type in cards:
 
 - **Artifacts** — documents, code, and web pages.
 - **Files** — PDFs, images, and other uploads.
 - **To-dos** — tasks and checklists.
+- **Tables** — data tables with their rows shown as JSON.
 
-Click an item to jump to its own page. Click the **✕** icon to remove an item
-from the collection without deleting it.
+Each card shows what you've collected and lets you add more items with the **+
+Add** button. Click an item to jump to its own page. Click the **✕** icon to
+remove an item from the collection without deleting it.
 
 ## Using collections in Chat
 
@@ -62,12 +66,21 @@ assistant then has access to:
 - All **artifacts** in those collections (the full text).
 - All **files** — PDFs are searched by their indexed chunks, text files are
   inlined, and images/binaries are skipped.
+- All **tables** — a preview of each table's rows shown as JSON.
 - All **to-dos** — shown as a checklist so the assistant knows what work is
   planned.
 
 If you pick multiple collections, overlapping items are counted once (no
 duplication), and the picker shows you the combined size so you can see how much
 context you're using.
+
+## Chat with a collection
+
+On any collection's dashboard, a floating chat bubble (bottom right) lets you ask
+questions about just that collection. The assistant has access to all the content
+on the collection, and can use tools to add new to-dos, notes, or artifacts back
+into the collection. This is a quick way to get focused answers without opening
+the full Chat page.
 
 ## Collections and visibility
 
@@ -86,6 +99,10 @@ You can add items to a collection from anywhere:
 - **From Artifacts:** multi-select artifacts and click **Add to collection**.
 - **From Files:** multi-select files and click **Add to collection**.
 - **From To-dos:** multi-select tasks and click **Add to collection**.
+- **From Collections dashboard:** click the **+ Add** button on each card to
+  pick items to add.
+- **From the collection chat:** tell the assistant to add a task, note, or
+  artifact, and it will file it into the collection automatically.
 - **When creating:** the assistant can create artifacts and file them into a
   collection automatically as part of a larger task.
 

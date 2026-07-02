@@ -15,6 +15,11 @@ The schema lives in `supabase/migrations`. The main tables:
 - `artifacts`, `files` - saved content and uploads.
 - `documents`, `document_chunks` - the PDF knowledge base (chunks live in
   `pgvector`).
+- `collections`, `collection_artifacts`, `collection_files`, `collection_todos`,
+  `collection_tables` - named groups of content you can scope a chat to.
+- `user_tables` (and `ut_*` physical tables) - the real Postgres tables feature
+  (Airtable-but-real-Postgres).
+- `todos` - tasks and checklists.
 - `skills` - both always-on prompts and on-demand skills.
 - `tools`, `agents`, `guardrails` - the configurable capabilities.
 - `webhooks`, `webhook_events` - inbound triggers and their log.
@@ -28,6 +33,7 @@ The schema lives in `supabase/migrations`. The main tables:
 - `usage_events` - per-call token and cost accounting.
 - `allowed_emails` - the invite allowlist.
 - `forged_functions` - the audit/redeploy record for Forge.
+- `vault_secrets` - Vault-backed team secrets.
 
 Enums include `visibility` (`private` / `unlisted` / `public`), `message_role`,
 and `artifact_type`.
