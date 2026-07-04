@@ -1,0 +1,57 @@
+---
+title: Links
+description: Save and organize shared bookmarks with automatic metadata.
+---
+
+A **link** is a shared bookmark. Paste a URL and SupaNet fetches its title, description, preview image, and favicon automatically — so you can keep a clean bookmarks list without manual data entry. Links work like artifacts and to-dos: you can organize them into collections, share them with your team, and include them in chats.
+
+## Why links are useful
+
+Links let you keep a team-wide bookmarks area where every link is useful, annotated, and accessible. You can:
+
+- **Paste and auto-populate** — paste any URL and metadata (title, description, preview image) fills in automatically.
+- **Add notes** — optionally include your own context or why the link matters.
+- **Organize into collections** — group related links so the assistant can access them when you chat.
+- **Share with your team** — mark a link as workspace-visible so everyone can see it, add notes, and update the list.
+- **Chat with your links** — include links in a collection and chat with the assistant, who can read them and discuss what's at each URL.
+
+## Where to find your links
+
+On the sidebar under **Assets**, select **Links**. You'll see all your links in a card grid, with options to add, edit, and delete them.
+
+## Creating a link
+
+Click **New link** or paste a URL directly into the text input. SupaNet inserts the link right away (using the hostname as a placeholder) and then:
+
+1. Fetches the page server-side (your browser can't read cross-origin pages).
+2. Parses the `<title>`, OpenGraph meta tags (`og:description`, `og:image`), and favicon.
+3. Updates the link card with the real title, description, and preview image.
+
+If the fetch times out or fails, the link stays with the bare URL and hostname — adding a link never blocks on metadata.
+
+## Editing a link
+
+Click a link card to edit:
+
+- **URL** (required) — the link destination.
+- **Title** (auto-populated) — what the page is called.
+- **Description** (auto-populated) — a summary or meta description.
+- **Notes** (optional) — your own context or why it matters.
+- **Visibility** — private (only you) or workspace (the whole team can see and edit it).
+
+The preview image and favicon appear automatically; they can't be edited directly.
+
+## Collections and chat context
+
+You can file links into **collections** — the same named groups you use for artifacts, files, and to-dos. On the Links page, multi-select links and click **Add to collection** to file them. When you use a collection in Chat (via the 📚 picker), the assistant has access to the links alongside artifacts, files, and tasks.
+
+## Sharing and collaboration
+
+- **Private links** — only you (and admins) can see or edit them.
+- **Workspace links** — everyone on your team can see them, add notes, and delete them.
+
+When a link is workspace-visible, your team sees live updates whenever anyone edits its notes or details.
+
+## Searching and finding
+
+The grid shows all your links with their preview images, titles, and descriptions. Hover over a link to see its full URL. No search yet, but you can organize them into collections to keep them grouped by topic or project.

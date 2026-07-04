@@ -43,6 +43,18 @@ The examples show real-world flows: creating an artifact with a collection tag, 
 
 ## Currently available
 
-- **Artifacts API** - create, list, read, update, delete artifacts and file them into collections. Same as the REST API you'd use from scripts or Zapier, but right here with live tokens.
+### Artifacts API
 
-More API surfaces coming soon.
+Create, list, read, update, and delete artifacts and file them into collections. Same as the REST API you'd use from scripts or Zapier, but right here with live tokens.
+
+### Run tools
+
+Invoke any **active tool** directly — builtins like `list_todos`, `send_email`, or `search_documents`, custom HTTP tools, and remote MCP tools — from scripts, cron jobs, or Zaps, with no model in the loop. Chain several tools in a single request using a `steps` array; the output of one step automatically feeds into the next, with `{{prev}}` inside any string input replaced by the previous result.
+
+**Why run tools directly?**
+
+- Skip the model cost and latency when you have a deterministic workflow.
+- Fetch data, transform it, and pipe it to your external systems.
+- Build automation that doesn't need AI reasoning — schema validation + tool invocation is the gate.
+
+See the **Run tools** tab for examples.
