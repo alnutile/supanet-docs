@@ -41,6 +41,16 @@ Click a link card to edit:
 
 The preview image and favicon appear automatically; they can't be edited directly.
 
+## Link screenshots
+
+When you save a link, SupaNet shows a preview image — either a captured screenshot or the page's OpenGraph preview image (`og:image`). A screenshot is preferred because it shows the page as it actually appears.
+
+**Attaching a screenshot:**
+
+The assistant can attach a screenshot to a link using the `set_link_screenshot` tool. Pass the link's ID and the URL of a screenshot image (e.g., from a browse-the-web capture). The image is downloaded and stored; the link card then shows the screenshot as its preview instead of the generic OpenGraph image.
+
+You can also trigger this through [run-tool](/docs/using/api#run-tools) if you have a screenshot URL from an external capture service.
+
 ## Collections and chat context
 
 You can file links into **collections** — the same named groups you use for artifacts, files, and to-dos. On the Links page, multi-select links and click **Add to collection** to file them. When you use a collection in Chat (via the 📚 picker), the assistant has access to the links alongside artifacts, files, and tasks.

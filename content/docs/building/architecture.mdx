@@ -32,14 +32,27 @@ hiding the key.
 
 1. The client sends the message history plus the user's access token to the
    `chat` edge function.
+   - In a **group thread** (shared with other members), only messages containing
+     `@ai` trigger the assistant. Private threads always trigger.
 2. The function assembles a **system prompt**: it loads all always-on prompts
    (`skills.auto_apply = true`) with the service role, optionally layered with an
    invoked skill or an agent's instructions.
+   - In a group thread, the system prompt includes a note that this is a shared
+     conversation and lists who the participants are.
 3. It loads the active **tools** the model is allowed to use.
 4. It runs an **agentic loop**: the model may call tools; the function executes
    them, feeds the results back, and loops until the model is done or it hits a
    turn limit.
 5. The reply **streams** back to the browser as server-sent events.
+
+## Group chat
+
+A conversation can be shared with other workspace members via the **People**
+picker. Members see the full thread, can post as themselves, and talk to each
+other. The assistant only replies when someone writes `@ai`, keeping the thread
+lightweight and cost-effective for team collaboration. The message history sent
+to the model prefixes each human message with the sender's name so the assistant
+can follow who said what.
 
 ## Model selection
 
