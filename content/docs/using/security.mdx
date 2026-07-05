@@ -1,0 +1,84 @@
+---
+title: Security dashboard
+description: Run workspace posture scans and track security findings.
+---
+
+SupaNet has a security dashboard where admins can audit the workspace's configuration for common security issues. Think of it as a repeatable workspace health check.
+
+## Running a scan
+
+The **Security** page (admin-only, under Governance in the sidebar) has a **"Run scan"** button. When you press it, SupaNet checks:
+
+- Webhooks without shared secrets
+- Webhooks with tools enabled on untrusted input
+- Missing blocking guardrails on webhook paths
+- The `send_email` tool active without a recipient allowlist
+- The `get_secret` tool paired with workspace-shared vault secrets
+- Active external MCP server handles
+- MCP/API bearer tokens unused for 90+ days
+- Public and unlisted artifacts (an inventory, not an alarm)
+- Single admin (bus factor risk)
+
+The scan then displays a summary and lists any **open findings**.
+
+## Working with findings
+
+Each finding shows:
+
+- **severity** — critical, high, medium, low, or info
+- **title** — what the issue is
+- **detail** — why it matters
+- **suggestion** — how to fix it
+
+From the dashboard, you can:
+
+- **Promote to feature** — file the finding onto the Features board in the idea lane. From there, the normal approval pipeline takes over and it can be built like any other feature. The button itself never touches GitHub.
+- **Dismiss** — accept the risk. The dismissal status carries over on future scans, so you will not be nagged about the same accepted risk every day.
+
+Triaged findings (dismissed or promoted) are hidden by default but can be shown with a toggle. Once promoted to a feature and merged, you can reopen the finding if needed.
+
+## Running scans on a schedule
+
+To run the security scan every day (or at any interval), create an agent in the Agents dashboard:
+
+1. Give it a name like "Daily security scan"
+2. Scope it to **only** the `run_security_scan` tool
+3. Give it a schedule (e.g., every day at 9 AM)
+
+The agent will run the scan deterministically and log the results. You can review new findings in the Security dashboard anytime.
+
+## How scans are deterministic
+
+The findings themselves are **configuration facts**, not model opinions. SupaNet checks webhook secrets, guardrail coverage, active tools, and so on — all determined by reading the `webhooks`, `guardrails`, `tools`, and other tables.
+
+The **only** model call in a scan is optional: a cheap `utility`-model summary of the findings for prose (e.g., "3 high-severity issues; start with webhook secrets"). If that call fails, SupaNet falls back to a deterministic summary. So a daily scan costs at most one cheap model call, and even that is best-effort.
+
+## What each finding means
+
+### Webhooks
+
+A webhook without a **shared secret** is only protected by the opaque token in the URL. URLs leak in logs, browser history, configs. Set a secret in the webhook editor so only callers with the right Bearer header are accepted.
+
+An active **webhook with tools enabled** (`allow_tools`) on untrusted input is risky if there is no blocking guardrail screening it first. The higher the risk (high severity if no secret; medium if a secret exists), the more you should confirm the webhook's tool set is the minimum it needs.
+
+A webhook feeding a model with **no blocking guardrail** means prompt-injection attempts reach the agent unscreened. Re-enable the built-in "Prompt injection screen" guardrail or add another blocking rule.
+
+### Email and secrets
+
+The `send_email` tool without a **recipient allowlist** can mail any address. In a workspace with webhooks, that is an exfiltration channel. Set allowed recipients in Settings → Email.
+
+The `get_secret` tool paired with **workspace-shared secrets** means any agent (or chat) with that tool can read them. Keep secrets private-scoped unless the whole team genuinely needs them.
+
+### MCP and tokens
+
+Active **external MCP handles** expose their entire remote toolsets workspace-wide — the remote tools can send mail, post messages, etc. Deactivate handles you are not using, or scope them to specific agents instead of leaving them globally on.
+
+**Stale bearer tokens** (unused for 90+ days) are pure standing risk. Revoke them.
+
+### Sharing
+
+**Public and unlisted artifacts** are readable by anyone with the link. This is usually intentional, but the dashboard reminds you to audit them.
+
+### Admin count
+
+A **single admin** is a bus-factor risk — if that account is lost, so is administrative control. Promote a second trusted member to admin as a recovery path.

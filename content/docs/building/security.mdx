@@ -1,0 +1,133 @@
+---
+title: Security scanning
+description: How the workspace posture scan works.
+---
+
+The security dashboard runs a **deterministic workspace posture scan** as a repeatable feature. It lives behind the `run_security_scan` builtin tool, so it integrates with all existing trigger surfaces (the dashboard button, scheduled agents, chat) without new plumbing.
+
+## Architecture
+
+The scan is split into three layers to separate concerns and keep the evaluator testable:
+
+### 1. Data gathering (`gatherPosture`)
+
+A service-role query that reads configuration tables and returns a plain `PostureSnapshot`:
+
+```ts
+interface PostureSnapshot {
+  webhooks: Array<{ id, name, is_active, has_secret, allow_tools, agent_id, tool_id }>
+  guardrails: Array<{ name, applies_to_webhooks, applies_to_chat, action }>
+  activeTools: Array<{ name, kind }>
+  emailAllowlisted: boolean | null
+  vaultSecrets: Array<{ name, scope }>
+  publicArtifacts: number
+  unlistedArtifacts: number
+  staleMcpTokens: Array<{ name, days }>
+  adminCount: number
+}
+```
+
+No filtering, no logic — just the facts.
+
+### 2. Evaluation (`evaluatePosture`)
+
+A **pure function** that takes a snapshot and returns findings. This function has no imports, no side effects, and no env access. It is where judgment lives, and why it is unit-tested in `supabase/functions/tests/security_test.ts`.
+
+Each finding is:
+
+```ts
+interface Finding {
+  key: string              // stable across runs
+  severity: Severity       // critical, high, medium, low, info
+  title: string
+  detail: string
+  suggestion: string
+}
+```
+
+The `key` is stable so that when you dismiss or promote a finding, the status carries over on future runs.
+
+### 3. Orchestration (`runSecurityScan`)
+
+The builtin handler that:
+
+1. Admin-gates (re-checks `is_admin` in code, because builtins run with service role)
+2. Calls `gatherPosture()` to read the config snapshot
+3. Calls `evaluatePosture()` to generate findings
+4. Carries dismissed/promoted status forward by matching on the stable `key`
+5. Inserts `security_findings` rows with the status
+6. Makes one optional `utility`-model call for a prose summary (fails open to deterministic text)
+7. Logs the scan to `activity_log`
+
+## How it integrates
+
+Because `run_security_scan` is an ordinary `tools` row with `is_builtin = true`:
+
+- The dashboard's **"Run scan" button** calls it via the universal `/run-tool` function (same as any HTTP tool)
+- A **scheduled agent** scoped to this tool runs it on a cron (admin-gated in code)
+- **Chat** can invoke it on request
+
+No custom endpoints, no dedicated handlers — it follows the same pattern as `search_documents`, `send_email`, and other builtins.
+
+## Why deterministic
+
+The findings are **configuration facts**, not model opinions:
+
+- "Webhook W has no secret" is a boolean check on the database.
+- "Active tools include send_email" is a query result.
+- "Admin count is 1" is a COUNT.
+
+Only the run **summary** (the prose explaining what was found) involves a model call, and that is best-effort — it fails open to the deterministic summary if the model errors. So a daily scan costs at most one cheap `utility`-model call.
+
+This is the same philosophy as [guardrails](/docs/building/guardrails): enforcement stays in code, model output is never inserted into an agentic prompt.
+
+## Status carry-over
+
+When you dismiss or promote a finding, the status is saved on the `security_findings` row. On the next scan run:
+
+1. The evaluator generates all findings as if it is the first time (no memory of prior state).
+2. `runSecurityScan` fetches prior findings matching the same `key`.
+3. New rows inherit the prior status (dismissed or promoted) and `feature_id` (if promoted).
+
+So if you dismiss "webhook has no secret" on Monday, Tuesday's scan will show it as dismissed, not re-nagging.
+
+## Testing
+
+The pure evaluator is unit-tested in `supabase/functions/tests/security_test.ts`:
+
+```bash
+npm run test:deno
+```
+
+Tests cover:
+
+- Clean posture yields no findings
+- Each check fires or stays quiet as expected
+- Severity levels adjust correctly (e.g., a tool-enabled webhook is high without a secret, medium with one)
+- Direct-function webhooks (tool_id) skip model-path checks but keep the secret check
+- Stale tokens, public artifacts, single admin, etc.
+- Finding sort order (critical first)
+
+The `PostureSnapshot` is a seeded value in tests — no DB access, no env needed.
+
+## Database
+
+Two new tables back the feature:
+
+- `security_scans` — one row per run, with status, summary, finding count, error (if any), timestamps, and who triggered it
+- `security_findings` — the actionable items from a scan, with severity, title, detail, suggestion, and the stable `key`
+
+RLS is admin-only on both (same as [Vault](/docs/building/data-model#security-dashboard) and Guardrails). Rows are written by the service role; admins update finding status from the dashboard.
+
+## Promotion to Features
+
+When you click "Promote to feature" on a finding, the SecurityPage creates a `features` row in the `idea` lane with:
+
+- title: the finding's title
+- description: the detail + suggestion + a note saying it came from the security scan
+- lane: `idea`
+- owner_id: the current user
+
+From there, the normal approval pipeline takes over — an approver can review it, open a GitHub issue, and the coding agent implements it. The button itself never touches GitHub; it just files a card.
+
+The finding's `status` is then marked `promoted` and `feature_id` is set to the new feature's id.
