@@ -1,0 +1,104 @@
+---
+title: Slack
+description: Add the bot to Slack rooms and bind them to collections for contextual answers.
+---
+
+SupaNet can join Slack channels as a bot. Invite it to a room, bind that room to one or more collections (and optionally an agent), and mention it - it will answer using that room's context: docs, files, to-dos, and links.
+
+One room equals one context, Claude-Tag style. Your team can ask questions in Slack and get answers grounded in the collections you've bound to that channel.
+
+## Setup
+
+### 1. Create the Slack app
+
+Go to <https://api.slack.com/apps> and create a new app **from a manifest**. Paste the manifest below (replace `<project-ref>` with your Supabase project reference):
+
+```yaml
+display_information:
+  name: Workspace Assistant
+  description: Answers with the room's collection context.
+features:
+  bot_user:
+    display_name: assistant
+    always_online: true
+oauth_config:
+  scopes:
+    bot:
+      - app_mentions:read
+      - chat:write
+      - channels:history
+      - groups:history
+      - users:read
+settings:
+  event_subscriptions:
+    request_url: https://<project-ref>.supabase.co/functions/v1/slack-events
+    bot_events:
+      - app_mention
+  org_deploy_enabled: false
+  socket_mode_enabled: false
+  token_rotation_enabled: false
+```
+
+Install the app to your workspace. Then grab:
+- **Bot User OAuth Token** from *OAuth & Permissions*
+- **Signing Secret** from *Basic Information*
+
+### 2. Connect in SupaNet
+
+Go to **Settings → Slack** (admin only) and paste both the bot token and signing secret. They are stored in Supabase Vault - never in a table or the browser.
+
+### 3. Enable events in Slack
+
+In your Slack app's *Event Subscriptions*, turn on events and set the **Request URL** to the link shown in Settings once connected. Slack will send a verification challenge; it succeeds immediately since the function is already deployed.
+
+Then subscribe to the `app_mention` bot event.
+
+### 4. Bind a room
+
+Invite the bot to a Slack channel with `/invite @YourBot`. Grab the channel ID from channel details → About → Channel ID, then go to **Settings → Slack → Bind a channel** and:
+- Pick one or more **collections** the room can use
+- Optionally pick an **agent** (with or without tool access)
+- Save the binding
+
+### 5. Try it
+
+Type in Slack: `@YourBot what's the latest on the launch?` The bot will answer using the bound collections' content.
+
+## How it works
+
+When someone @mentions the bot:
+
+1. Slack sends an event to the `slack-events` edge function
+2. The function verifies the request signature (HMAC using your signing secret)
+3. It looks up the channel binding (collections + agent)
+4. It loads that room's context and the recent thread transcript
+5. The bot thinks and replies in the thread
+
+The reply uses the binding's creator's access - so if you're an admin and bind a workspace-visibility collection, everyone in that room can use it.
+
+## Tools and agents
+
+A channel binding can have an optional **agent**. When set, the bot uses the agent's instructions and can run its tools - but only if you enable the **Allow the agent's tools** checkbox on the binding.
+
+By default, tools are off. This means an untrusted room (or one where you just want answers, no actions) runs the bot read-only.
+
+## Safety
+
+- The endpoint is public but every request must carry a valid HMAC signature from your signing secret - there is no URL token to leak.
+- Bot messages never trigger replies (no loops).
+- Guardrails run and **fail closed** - if a request is blocked, you see a message in Slack and a log entry.
+- Tools are off by default per binding, mirroring webhook safety.
+
+## Activity and auditing
+
+Every mention is logged:
+- **Slack events table** - admin-readable, with who asked, what they asked, and the outcome
+- **Activity feed** - replies log as `slack.reply`
+- **Usage page** - calls are tracked with `context = 'slack'` for cost tracking
+
+## Not built yet
+
+- DMs to the bot (replying with just your own context)
+- `send_slack_message` builtin for agents to proactively post into bound rooms
+- In-channel `/` commands to manage bindings without leaving Slack
+- Filing notable messages back into the bound collection

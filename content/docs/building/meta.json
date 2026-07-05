@@ -15,6 +15,7 @@
     "mcp-server",
     "external-mcp-servers",
     "webhooks",
+    "slack",
     "email",
     "data-model",
     "teach-supanet-about-itself"

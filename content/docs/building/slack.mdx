@@ -1,0 +1,178 @@
+---
+title: Slack
+description: Architecture and implementation of the Slack bot and channel bindings.
+---
+
+The Slack integration lets the workspace bot join Slack channels and answer @mentions using collection context - the same architecture as [webhooks](/docs/building/webhooks) but triggered by Slack events instead of HTTP calls.
+
+## Overview
+
+```
+Slack (app_mention) 
+  └─► slack-events edge function (public, verify_jwt=false)
+        1. Verify X-Slack-Signature HMAC (signing secret from Vault)
+        2. Dedupe on event_id (unique insert into slack_events audit log)
+        3. Ack 200 within 3 seconds, then in the background:
+             binding = slack_channel_bindings[channel_id]
+             system = agent.instructions (or default) + loadCollectionsContext(...)
+             guardrails (webhook context, fail closed)
+             agent loop (collections context + tools if allowed)
+             reply via chat.postMessage into the thread
+```
+
+## Tables
+
+**`slack_integration`** (single row)
+- `team_name` - optional cosmetic label
+- `bot_user_id` - learned from first event, used to strip self-mentions
+- `bot_token_secret_id` / `signing_secret_id` - Vault pointers (never the actual secrets)
+
+Credentials live only in Vault. The RPC `set_slack_integration(p_bot_token, p_signing_secret)` writes them (admin-gated, security-definer). The edge function reads them through `read_slack_secrets()` (service-role-only).
+
+**`slack_channel_bindings`**
+- `channel_id` - Slack channel ID (C…/G…), unique
+- `channel_name` - cosmetic label (#project-acme)
+- `collection_ids[]` - the room's context
+- `agent_id` - optional agent (tools only when `allow_tools=true`)
+- `owner_id` - the user the binding runs as (their access controls apply)
+- `allow_tools` - deterministic gate, mirroring `webhooks.allow_tools`
+- `is_active` - pause a binding without deleting it
+
+Every member can read bindings (it's a workspace surface); admins create/update/delete them. A new binding runs as its creator - so the bot inherits the creator's access to collections and tools.
+
+**`slack_events`** (audit log)
+- `event_id` - Slack's `event_id` (unique, for deduplication)
+- `channel_id` / `slack_user_id` - who asked in which channel
+- `kind` - event type (always `app_mention` for now)
+- `status` - `received` → `ok` / `error` / `blocked` / `skipped`
+- `text` - the (mention-stripped) request as the model saw it
+- `result` - the bot's reply
+- `error` - if something went wrong
+
+Admins read the log; only the edge function (service role) writes.
+
+## Edge function: `slack-events`
+
+**Location**: `supabase/functions/slack-events/index.ts`
+
+**Access**: Public (`verify_jwt: false`), gated by HMAC signature only.
+
+### Request handling
+
+1. **Signature verification** - computes HMAC-SHA256 of the request with the signing secret from Vault, constant-time compares, checks replay window (±5 min).
+2. **Dedupe** - inserts an `slack_events` row with the unique `event_id`. Slack retries on slow acks; the unique constraint gates the second run.
+3. **3-second ack** - responds 200 immediately so Slack knows the webhook is alive.
+4. **Background processing** - via `EdgeRuntime.waitUntil`, the function does the model work and Slack reply.
+
+### Processing loop
+
+```typescript
+binding = slack_channel_bindings[channel_id]
+text = slackTextToPlain(stripBotMention(event.text))
+
+// Guardrails (fail closed, like webhooks)
+guard = runGuardrails(db, 'webhook', text, binding.owner_id)
+if guard.blocked: respond "⛔ That was blocked", log it, return
+
+// Agent or plain assistant
+systemPrompt = agent?.instructions || default
+collectionIds = binding.collection_ids ∪ agent?.collection_ids
+
+// Tools only if allowed
+tools = binding.allow_tools ? agent.tool_ids : []
+
+collCtx = loadCollectionsContext(db, collectionIds, binding.owner_id, MODEL)
+systemPrompt += collCtx
+
+// Conversational context
+transcript = fetchSlackTranscript(channel_id, thread_ts?)
+userContent = formatTranscript(transcript) + user.asks + text
+
+// Agent loop
+messages = [system, user_content]
+for turn in 0..MAX_TOOL_TURNS:
+  out = orComplete(messages, tools, ...)
+  recordUsage(context='slack', ...)
+  if out.toolCalls:
+    dispatch tools (http / builtin / mcp) 
+    append results, continue
+  else: break
+
+reply = toMrkdwn(result)
+postSlackMessage(channel, reply, threadTs)
+```
+
+### Calling Slack Web API
+
+Pure helper functions in `_shared/slack.ts`:
+- `postSlackMessage(botToken, channel, text, threadTs?)` - posts the reply (threaded if needed)
+- `fetchSlackTranscript(botToken, channel, threadTs?, limit?)` - gets recent context
+- `fetchSlackUserNames(botToken, userIds[])` - resolves display names
+
+All three use the bot token from Vault. They are throw-free, returning empty results on error so a bad API call does not crash the flow.
+
+## Shared utilities: `_shared/slack.ts`
+
+Pure logic for testing:
+
+- **`computeSlackSignature(secret, timestamp, body)`** - HMAC-SHA256
+- **`verifySlackSignature({signingSecret, body, timestamp, signature})`** - verify + replay window
+- **`stripBotMention(text, botUserId?)`** - remove `<@bot_id>` from the message
+- **`slackTextToPlain(text)`** - decode Slack markup (`<@U1|name>` → `@name`, `<url|label>` → `label (url)`, entities like `&amp;` → `&`)
+- **`toMrkdwn(markdown)`** - convert model markdown to Slack mrkdwn (`**bold**` → `*bold*`, `[link](url)` → `<url|link>`, headings → bold)
+- **`shouldSkipEvent(event)`** - returns a skip reason or null: filters bot messages, edits, empty text, missing user/channel
+- **`formatTranscript(messages, nameMap, excludeTs?)`** - render recent messages as "name: text" lines, skip the triggering message
+
+All unit-tested in `supabase/functions/tests/slack_test.ts`.
+
+## RPC functions
+
+**`set_slack_integration(p_bot_token, p_signing_secret, p_team_name?)`** (admin-gated, security-definer)
+- Creates or updates the single `slack_integration` row
+- Both secrets are write-only; empty on update means keep existing
+- Stores them in Vault via `vault.create_secret()` / `vault.update_secret()`
+
+**`delete_slack_integration()`** (admin-gated)
+- Removes credentials; bindings stay (they're inert without them)
+
+**`read_slack_secrets()`** (service-role-only)
+- Called by the edge function to get the decrypted bot token, signing secret, and learned bot_user_id
+- Forbidden from API roles (anon/authenticated)
+
+**`slack_is_configured()`** (authenticated)
+- Simple boolean check for the UI
+
+## Security notes
+
+- **No URL token** - the HMAC signature is the only gate. Signing secret must be kept safe (Vault-backed, write-only in the RPC).
+- **Deduplication** - `event_id` is unique; Slack retries are idempotent.
+- **Fail closed** - guardrails run in `webhook` context with `block: true` - any error or violation blocks the message.
+- **No loops** - bot messages (`bot_id` field) and message edits (`subtype` field) are skipped, so the bot cannot answer itself.
+- **Read-only by default** - `allow_tools=false` means the bot runs with no tools, only the model.
+- **Per-user access** - the binding runs as its creator, so collections context and builtin tools re-enforce that user's access in code.
+
+## Binding a room
+
+1. Invite the bot to a Slack channel: `/invite @assistant`
+2. Get the channel ID from channel details → About
+3. Admin goes to **Settings → Slack → Bind a channel**
+   - Paste the channel ID
+   - Pick collections (at least one for context, or none for plain assistant)
+   - Optionally pick an agent
+   - Check **Allow tools** if you want the agent to act
+4. Save the binding
+
+The binding's creator (`owner_id`) is the identity the bot runs as. Bind workspace-visibility collections for shared rooms so the answer respects what everyone already has access to.
+
+## Usage tracking and auditing
+
+- **`slack_events` table** - admin-readable audit log of every mention (who, channel, status, transcript/reply)
+- **`activity_log`** - `slack.reply` entries for successful replies, `guardrail.blocked` / `.flagged` for blocked mentions
+- **`usage_events`** - every model call records `context='slack'` for the Usage page
+
+## Future directions
+
+- **DMs** - handle `message.im` (direct messages to the bot) and answer with the DM-er's own context (private collections, their files)
+- **`send_slack_message` builtin** - agents can proactively post into bound rooms ("ambient" behavior, like scheduled email)
+- **In-channel commands** - `/slash` commands to manage bindings without leaving Slack
+- **Memory** - file notable channel messages back into the bound collection so the bot "remembers"
