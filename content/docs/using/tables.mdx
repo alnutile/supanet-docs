@@ -1,0 +1,134 @@
+---
+title: Tables
+description: Create and manage data tables, then ask the assistant to read and update them.
+---
+
+A **table** is a structured data set you can organize into rows and columns. SupaNet
+lets you create tables by hand or describe them to AI, then edit the data in a
+spreadsheet-style interface. The assistant can read and update your tables too, so
+you can ask it to fill in rows or fetch data without touching the UI.
+
+## Why tables are useful
+
+Tables are a lightweight way to organize structured information. Unlike static documents
+or artifacts, tables let you:
+
+- **Create them quickly** — describe what you want to track and AI builds the columns,
+  or set them up by hand.
+- **Enter and edit data** — click any cell to type, and changes save as you go.
+- **Search and filter** — find rows by keyword across all columns.
+- **View one row at a time** — click a row to open it as a friendly form.
+- **Share with your team** — mark a table as workspace-visible so everyone can see
+  and edit the data together.
+- **Talk to the assistant** — the assistant can read your tables, add rows, and
+  update data as part of your conversation.
+
+## Where to find your tables
+
+On the sidebar, select **Tables**. You'll see a list of tables on the left. Click any
+table to view its data in a grid on the right. If you have no tables yet, you'll see
+an invite to create your first one.
+
+## Creating a table
+
+Click **Create your first table** (or **+ New table** if you have others). You'll see
+two paths:
+
+### Describe it to AI
+
+Type a description of what you want to track — for example, "my plants and when I last
+watered them" or "a job application tracker: company, role, status, applied date,
+salary range, notes". Click **Set it up** and SupaNet generates the columns.
+
+You can also pick a template from the quick-pick buttons (Simple CRM, Content calendar,
+Job applications, Inventory) and AI will set those up with sensible column types.
+
+### Build it by hand
+
+1. **Table name** (required) — what you're calling it.
+2. **Fields** — click **Add field** and name each column and pick its type:
+   - **Text** — short text, a name or title.
+   - **Long text** — paragraph-length content.
+   - **Number** — decimals, weights, prices.
+   - **Whole number** — integers, counts.
+   - **Checkbox** — yes/no or true/false.
+   - **Date** — a calendar date.
+   - **Date & time** — a moment in time.
+   - **JSON** — structured data as JSON (for experts).
+3. **Visibility** — private (only you) or shared with everyone in your workspace.
+
+Click **Create table** to save it.
+
+## Working with data
+
+### Adding rows
+
+In the table view, click **New row** to add a blank row. Start typing in any cell to
+fill it in. Hitting Enter moves to the next cell, and changes save as you go — no
+"Save" button needed.
+
+You can also ask the assistant in Chat to add rows for you. For example, "Add 10 more
+product SKUs" or "Fill in this table from the CSV I uploaded."
+
+### Editing rows
+
+Click any cell to edit its value. For **long text**, **date**, and **date & time** fields,
+you can also click the row number (the `#` on the left) to open the row in an expanded
+form view — perfect for reviewing or editing multiple fields at once.
+
+### Searching and filtering
+
+If your table has data, use the search box in the top-right to find rows by keyword.
+The search looks across all columns, so "Jane" finds any row where any field contains
+"Jane" (not just the name column).
+
+### Deleting rows
+
+Hover over a row and click the trash icon at the end. Deleted rows are gone forever.
+
+## Sharing and collaboration
+
+- **Private tables** — only you (and admins) can see or edit the data.
+- **Workspace tables** — everyone on your team can see the data, add rows, edit cells,
+  and reorder columns.
+
+When a table is workspace-visible, your team sees live updates whenever anyone changes
+the data.
+
+## Managing fields
+
+You can add, rename, or delete fields without losing your data.
+
+### Adding a field
+
+In the table view, click the **+** at the right of the column headers. Name the field
+and pick its type, then click **Add field**. The new column appears immediately with
+no data in the existing rows.
+
+### Editing a field
+
+Open **Settings** (the gear icon in the top bar) to see all your fields. Click the
+**×** next to a field to delete it — SupaNet will ask you to confirm, because deleting
+a field wipes out all the data in that column.
+
+To rename a field or change its type, you'll need to delete and recreate it (data loss).
+This is a known limitation.
+
+## Collections
+
+You can file tables into **collections** — the same named groups you use for artifacts
+and to-dos. When you use a collection in Chat (via the 📚 picker), the assistant has
+access to the artifacts, files, to-dos, and tables in that collection. This is useful
+for "ask the assistant to review this table alongside these docs."
+
+## Using tables in Chat
+
+The assistant has tools to work with your tables:
+
+- **List tables** — "Show me my tables" or "What tables do I have?"
+- **Query a table** — "How many rows are in the Leads table?" or "Show me all leads from
+  Acme Corp."
+- **Add rows** — "Add a new contact: Jane Doe, ACME, VP of Sales."
+- **Update rows** — "Mark the first three leads as contacted."
+
+Just ask naturally in the conversation, and the assistant does the work.
