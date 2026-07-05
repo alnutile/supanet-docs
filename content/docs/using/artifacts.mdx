@@ -43,6 +43,21 @@ Each artifact has a visibility setting:
 When something is unlisted or public, the link works for people who are not even
 signed in to SupaNet.
 
+## Interactive HTML artifacts
+
+HTML artifacts can be more than static pages. The assistant can create **live,
+interactive trackers** — checklists, kanban boards, scorecards, status dashboards
+— that you can click to update in real time.
+
+When you toggle a checkbox, click a status pill, or edit a note in a tracker, the
+change is saved immediately. That state persists across reloads and syncs to your
+other devices, so a tracker you start on your laptop picks up where you left off on
+your phone.
+
+The assistant can also **edit a tracker in place** instead of making a duplicate.
+Ask it to "add more items" or "change the layout" and it updates the existing
+artifact while keeping your saved state (your checked boxes, notes, choices) intact.
+
 ## Standalone web pages
 
 If an artifact is an HTML page, SupaNet can serve it as a **clean, full-screen
@@ -54,6 +69,10 @@ Because the page is served straight from the artifact, **editing the artifact
 updates the live page**. Fix a typo in the editor and the public link reflects
 it immediately. Private artifacts are never exposed this way - only unlisted or
 public ones.
+
+For interactive trackers shared publicly, the live page shows your saved state
+(your checked items, notes, and choices) but visitors can only view it — they
+cannot make changes that stick.
 
 ## Collections
 
