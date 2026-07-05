@@ -54,10 +54,19 @@ Two important details:
 
 ## Adding content from the assistant
 
-The assistant can also add content directly to your knowledge base. If it fetches
-an article, or you ask it to turn a transcript into searchable notes, it can save
+The assistant can save files directly to your Files area. This is especially useful
+for binary output it generates — like a base64 image from an image model — which it
+can now persist as a real, shareable file instead of just showing you the raw bytes.
+
+The assistant can:
+- Create files from base64 (images, PDFs) or plain text
+- List and fetch files it previously created
+- Organize files into collections
+- Tag files with metadata (e.g. source provenance)
+
+If it fetches an article or you ask it to turn a transcript into notes, it can save
 that content so the whole team (or just you, if you prefer) can search and learn
-from it later.
+from it later. PDFs are automatically indexed into the knowledge base.
 
 ## Adding files to collections
 
