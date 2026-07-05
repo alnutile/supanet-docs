@@ -9,60 +9,23 @@ One room equals one context, Claude-Tag style. Your team can ask questions in Sl
 
 ## Setup
 
-### 1. Create the Slack app
+The setup guide in **Settings → Slack** walks you through it step-by-step (~5 minutes). Here's what happens:
 
-Go to [https://api.slack.com/apps](https://api.slack.com/apps) and create a new app **from a manifest**. Paste the manifest below (replace `<project-ref>` with your Supabase project reference):
+1. **Create the app** — Go to [https://api.slack.com/apps](https://api.slack.com/apps) → *Create New App* → *From a manifest*, pick your workspace, and paste the manifest that Settings provides. It pre-fills the bot's name, permissions, and your workspace's event URL — nothing to configure by hand.
 
-```yaml
-display_information:
-  name: Workspace Assistant
-  description: Answers with the room's collection context.
-features:
-  bot_user:
-    display_name: assistant
-    always_online: true
-oauth_config:
-  scopes:
-    bot:
-      - app_mentions:read
-      - chat:write
-      - channels:history
-      - groups:history
-      - users:read
-settings:
-  event_subscriptions:
-    request_url: https://<project-ref>.supabase.co/functions/v1/slack-events
-    bot_events:
-      - app_mention
-  org_deploy_enabled: false
-  socket_mode_enabled: false
-  token_rotation_enabled: false
-```
+2. **Install and grab credentials** — Click *Install to Workspace*, then copy the **Bot User OAuth Token** (starts with `xoxb-`) and the **Signing Secret** from *Basic Information* → *App Credentials*. Paste both into Settings and hit *Connect Slack*. They are stored in Supabase Vault — never in a table or the browser.
 
-Install the app to your workspace. Then grab:
-- **Bot User OAuth Token** from *OAuth & Permissions*
-- **Signing Secret** from *Basic Information*
+3. **Verify the request URL** — Back in the Slack app, open *Event Subscriptions* and check that the Request URL shows **Verified**. (Save your credentials in Settings first — verification uses them. If it fails, click *Retry*.)
 
-### 2. Connect in SupaNet
+4. **Invite the bot to a channel** — In your Slack workspace, type `/invite @assistant` in the room you want it in.
 
-Go to **Settings → Slack** (admin only) and paste both the bot token and signing secret. They are stored in Supabase Vault - never in a table or the browser.
+5. **Bind the room** — Go to **Settings → Slack → Bind a channel**:
+   - Paste the **Channel ID** (find it in Slack: click the channel name → *About* tab → at the bottom)
+   - Pick one or more **collections** the room can use
+   - Optionally pick an **agent** (with or without tool access)
+   - Save the binding
 
-### 3. Enable events in Slack
-
-In your Slack app's *Event Subscriptions*, turn on events and set the **Request URL** to the link shown in Settings once connected. Slack will send a verification challenge; it succeeds immediately since the function is already deployed.
-
-Then subscribe to the `app_mention` bot event.
-
-### 4. Bind a room
-
-Invite the bot to a Slack channel with `/invite @YourBot`. Grab the channel ID from channel details → About → Channel ID, then go to **Settings → Slack → Bind a channel** and:
-- Pick one or more **collections** the room can use
-- Optionally pick an **agent** (with or without tool access)
-- Save the binding
-
-### 5. Try it
-
-Type in Slack: `@YourBot what's the latest on the launch?` The bot will answer using the bound collections' content.
+6. **Try it** — Type in Slack: `@assistant what's the latest on the launch?` The bot will answer using the bound collections' content.
 
 ## How it works
 
