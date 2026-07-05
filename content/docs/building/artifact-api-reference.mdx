@@ -176,8 +176,9 @@ default, but it can be shared with the workspace if you mark it shared in the UI
 
 Setting `visibility` to `unlisted` or `public` mints a `public_slug`:
 
-- For **HTML artifacts**: you also get a `share_url` — a full-screen page served
-  by SupaNet at that URL. Link it directly.
+- For **HTML artifacts**: you also get a `share_url` — a full-screen, sandboxed
+  page served by the app at `/p/<public_slug>`. The HTML runs in a secure iframe
+  so user code never executes on the app origin. Link it directly.
 - For **other types**: build the in-app link yourself:
   `https://<app-origin>/share/a/<public_slug>`.
 
