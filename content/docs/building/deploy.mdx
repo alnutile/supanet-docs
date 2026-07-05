@@ -14,11 +14,16 @@ npm run dev        # Vite dev server on http://localhost:5173
 npm run build      # typecheck (tsc -b) + vite build
 npm run lint       # eslint
 npm run typecheck  # tsc -b --noEmit
+npm test           # vitest (frontend unit tests)
+npm run test:deno  # deno test (edge-function tests)
 npm run gen:types  # regenerate database types from the linked project
 ```
 
 Always run `npm run build` before committing UI or logic changes - it typechecks
-the whole app.
+the whole app. Also run `npm test` (and `npm run test:deno` if you changed
+edge functions). Add or update tests when you add or change logic like parsing,
+validation, or calculations. Tests for frontend logic live next to the code as
+`src/**/*.test.ts(x)`; edge-function tests live in `supabase/functions/tests/`.
 
 ## Environment and secrets
 
@@ -110,6 +115,11 @@ point at localhost.
 
 Pushing to `main` updates everything automatically:
 
+- **Tests:** a GitHub Action (`.github/workflows/test.yml`) runs lint, build,
+  frontend tests, and edge-function tests on every PR and every push to `main`.
+  The feature bot's PRs get the same checks via `.github/workflows/claude-feature.yml`
+  (GitHub doesn't fire normal PR workflows for bot PRs, so the feature workflow runs
+  them inline).
 - **Frontend:** Railway rebuilds the app from the latest commit.
 - **Edge functions:** a GitHub Action redeploys any function that changed.
 - **Database migrations:** a separate Action applies any new migration files (see
