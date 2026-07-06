@@ -58,6 +58,27 @@ The assistant can also **edit a tracker in place** instead of making a duplicate
 Ask it to "add more items" or "change the layout" and it updates the existing
 artifact while keeping your saved state (your checked boxes, notes, choices) intact.
 
+## Images in artifacts
+
+When you're editing an artifact, you can **paste, drag-drop, or attach an image**
+into the body. The image is uploaded to a secure public storage bucket and a
+markdown `![](url)` link is inserted at your cursor. This works like GitHub-style
+image embedding.
+
+Once an image is in an artifact, the URL is permanent and doesn't expire—so the
+image stays visible when you share the artifact publicly. The images are stored
+with a location-based path (your id + a unique identifier) so they cannot be
+guessed; the security model is the same as public artifact slugs.
+
+To embed an image:
+
+- **Paste**: Copy an image from your clipboard and paste it into the editor.
+- **Drag and drop**: Drag an image file from your desktop onto the editor.
+- **Attach**: Click the 📎 **Image** button in the toolbar and select file(s) to
+  upload.
+
+Non-image files are ignored if you paste or drop them by accident.
+
 ## Standalone web pages
 
 If an artifact is an HTML page, SupaNet can serve it as a **clean, full-screen
