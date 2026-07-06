@@ -52,12 +52,16 @@ The `key` is stable so that when you dismiss or promote a finding, the status ca
 The builtin handler that:
 
 1. Admin-gates (re-checks `is_admin` in code, because builtins run with service role)
-2. Calls `gatherPosture()` to read the config snapshot
-3. Calls `evaluatePosture()` to generate findings
-4. Carries dismissed/promoted status forward by matching on the stable `key`
-5. Inserts `security_findings` rows with the status
-6. Makes one optional `utility`-model call for a prose summary (fails open to deterministic text)
-7. Logs the scan to `activity_log`
+2. Creates a `security_scans` row with initial progress checklist
+3. Calls `gatherPosture()` to read the config snapshot, updates progress to "Running posture checks"
+4. Calls `evaluatePosture()` to generate findings
+5. Carries dismissed/promoted status forward by matching on the stable `key`
+6. Inserts `security_findings` rows with the status, updates progress to "Saving findings"
+7. Makes one optional `utility`-model call for a prose summary (fails open to deterministic text), updates progress to "Writing the summary"
+8. Flips the scan row to `ok` or `error` status
+9. Logs the scan to `activity_log`
+
+The `security_scans` row is published to `supabase_realtime`, so the dashboard subscribes and renders each progress step live as the scan works.
 
 ## How it integrates
 
@@ -110,11 +114,27 @@ Tests cover:
 
 The `PostureSnapshot` is a seeded value in tests — no DB access, no env needed.
 
+## Live progress
+
+When a scan runs, the dashboard shows a real-time checklist instead of a blocked button. Each `security_scans` row carries a `progress` jsonb column — an ordered array of step objects:
+
+```ts
+interface ProgressStep {
+  key: string                      // 'gather', 'evaluate', 'save', 'summarize'
+  label: string                    // "Collecting workspace configuration", etc.
+  status: 'pending' | 'running' | 'done'
+}
+```
+
+As `runSecurityScan` completes each phase, it updates the row's `progress` array. Because `security_scans` is in the `supabase_realtime` publication, the dashboard subscribes via Realtime and renders each step ticking live. If the scan takes several seconds (config queries + the summary model call), the admin sees work in progress instead of a disabled button.
+
+A `scanProgress(current)` helper in `_shared/security.ts` constructs the checklist: steps before `current` are marked `done`, step `current` is `running`, and the rest are `pending`.
+
 ## Database
 
-Two new tables back the feature:
+Two tables back the feature:
 
-- `security_scans` — one row per run, with status, summary, finding count, error (if any), timestamps, and who triggered it
+- `security_scans` — one row per run, with status, summary, finding count, error (if any), timestamps, progress checklist, and who triggered it
 - `security_findings` — the actionable items from a scan, with severity, title, detail, suggestion, and the stable `key`
 
 RLS is admin-only on both (same as [Vault](/docs/building/data-model#security-dashboard) and Guardrails). Rows are written by the service role; admins update finding status from the dashboard.

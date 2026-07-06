@@ -7,7 +7,14 @@ SupaNet has a security dashboard where admins can audit the workspace's configur
 
 ## Running a scan
 
-The **Security** page (admin-only, under Governance in the sidebar) has a **"Run scan"** button. When you press it, SupaNet checks:
+The **Security** page (admin-only, under Governance in the sidebar) has a **"Run scan"** button. When you press it, you'll see a live progress checklist as the scan works through its steps:
+
+1. Collecting workspace configuration
+2. Running the posture checks
+3. Saving findings (carrying over prior triage)
+4. Writing the summary
+
+Once complete, SupaNet displays a summary and lists any **open findings**. The scan checks:
 
 - Webhooks without shared secrets
 - Webhooks with tools enabled on untrusted input
@@ -19,7 +26,6 @@ The **Security** page (admin-only, under Governance in the sidebar) has a **"Run
 - Public and unlisted artifacts (an inventory, not an alarm)
 - Single admin (bus factor risk)
 
-The scan then displays a summary and lists any **open findings**.
 
 ## Working with findings
 
