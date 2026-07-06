@@ -13,9 +13,9 @@ functions. Add a row, and the model can do something new.
   the model's inputs to the tool's configured URL and feeds the response back to
   the model. This is how you connect SupaNet to any external API or your own
   service.
-- **`web`** - switches on OpenRouter's web plugin, a portable web-browsing
-  capability that works across models. A seeded `web_browsing` tool ships on by
-  default.
+- **`web`** - switches on OpenRouter's web search server tool, a portable
+  web-browsing capability that works across models. A seeded `web_browsing` tool
+  ships on by default.
 
 Tools are admin-managed on the Tools page.
 
@@ -24,7 +24,7 @@ Tools are admin-managed on the Tools page.
 When tools are available, the chat function runs a loop:
 
 1. Call the model.
-2. If the model returns tool calls, execute them (web plugin for `web`, an HTTP
+2. If the model returns tool calls, execute them (web search for `web`, an HTTP
    POST for `http`).
 3. Append the assistant's turn, then add one tool-result message per call.
 4. Loop again, up to a maximum number of turns, until the model stops.
