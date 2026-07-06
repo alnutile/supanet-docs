@@ -21,8 +21,11 @@ Zap, another app — without needing to use MCP or hold a Supabase session. The
 
 ## Authentication
 
-Get a personal **connection token** from **Settings → Connect Claude**. These are
-the same tokens used for MCP. Send it as a bearer token:
+Send a bearer token in the `Authorization` header. It can be either:
+
+- A personal **connection token** from **Settings → Connect Claude** (the same
+  tokens used for MCP).
+- A Supabase session JWT (verified server-side via `auth.getUser`).
 
 ```
 Authorization: Bearer <token>

@@ -5,9 +5,10 @@ description: Complete reference for the REST CRUD API around artifacts.
 
 The **Artifacts CRUD API** (`supabase/functions/artifacts`, deployed public) is a
 plain-REST interface for pushing artifacts in and out of SupaNet without MCP or
-holding a Supabase session. Every call is authenticated by a per-user **bearer
-token** (`mcp_tokens`), and the function runs as the token's owner with re-enforced
-ownership in code (using the service role + code checks, not RLS).
+holding a Supabase session. Every call is authenticated by a **bearer token**
+(either a personal `mcp_tokens` token or a Supabase session JWT), and the function
+runs as the token's owner with re-enforced ownership in code (using the service
+role + code checks, not RLS).
 
 ## Base URL
 
@@ -186,8 +187,9 @@ Private artifacts are never exposed this way.
 
 ## Authentication note
 
-The bearer token is a personal connection token (`mcp_tokens`). Treat it like a
-password:
+The bearer token can be a personal connection token (`mcp_tokens`) or a Supabase
+session JWT (verified server-side via `auth.getUser`). Connection tokens should be
+treated like a password:
 
 - Rotate it if leaked.
 - Revoke it anytime from Settings → Connect Claude.

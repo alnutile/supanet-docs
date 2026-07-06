@@ -10,15 +10,20 @@ the same authentication model.
 
 ## Authentication
 
-Send a personal **connection token** as a bearer token in the `Authorization` header:
+Send a bearer token in the `Authorization` header:
 
 ```
 Authorization: Bearer <token>
 ```
 
-Get a token from **Settings → Connect Claude** (the same token used for MCP and the
-Artifacts API). Every call runs as the token's owner — you only ever see and modify
-your own to-dos. Revoke a token anytime in Settings to cut off access.
+The token can be either:
+
+- A personal **connection token** from **Settings → Connect Claude** (the same
+  token used for MCP and the Artifacts API).
+- A Supabase session JWT (verified server-side via `auth.getUser`).
+
+Every call runs as the token's owner — you only ever see and modify your own
+to-dos. Revoke a connection token anytime in Settings to cut off access.
 
 ## Base URL
 
