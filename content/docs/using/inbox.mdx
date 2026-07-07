@@ -1,0 +1,92 @@
+---
+title: Inbox
+description: One place for messages from any source — email, Slack, WhatsApp, and more.
+---
+
+The **Inbox** is a unified message hub. Instead of checking email, Slack, WhatsApp, and other channels separately, you can push all incoming messages into SupaNet and manage them in one place.
+
+## Why the inbox is useful
+
+The inbox lets you:
+
+- **Collect messages from any source** — email, Slack, WhatsApp, SMS, webhooks, or manual entries.
+- **Keep them organized** — mark as read, file messages into collections, or add notes.
+- **Chat about them** — include a collection of messages in Chat to have the assistant help with or summarize them.
+- **Automate on them** — set up a listener (automation rule) to react when a new message arrives.
+- **Share with your team** — mark a message as workspace-visible so everyone can see it and file it into shared collections.
+
+## Where to find your inbox
+
+On the top navigation bar, select **Inbox**. You'll see all your messages in a list, organized by source. Click a message to read its full body and optionally add notes.
+
+## Creating a message
+
+Click **New message** to compose and send a message directly into your inbox. You can set:
+
+- **From** — who it's from (your name, an email, or a handle).
+- **Subject** (optional) — a title or summary.
+- **Body** (required) — the message content.
+- **Visibility** — private (only you) or workspace (the whole team can see it).
+
+When you send, the message lands in your inbox immediately.
+
+## Receiving messages from external sources
+
+You can push messages into your inbox from anywhere — email providers, Slack, WhatsApp, your own scripts, or integrations like Zapier.
+
+### Email
+
+If you have email set up in your workspace, incoming emails automatically appear in the inbox with `source='email'`. See [Email](/docs/using/whats-possible) to configure inbound email.
+
+### Anything else (Slack, WhatsApp, scripts, Zapier)
+
+Use the public `message-inbound` API to push a message:
+
+```bash
+curl -X POST 'https://<project-ref>.supabase.co/functions/v1/message-inbound' \
+  -H 'Authorization: Bearer <connect-claude-token>' \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "source": "slack",
+    "from": "Jane <jane@example.com>",
+    "subject": "deploy finished",
+    "body": "prod is green",
+    "url": "https://slack.com/archives/...",
+    "external_id": "slack-msg-123"
+  }'
+```
+
+You authenticate using a personal connection token (from Settings → Connect Claude or the API page) or a Supabase session JWT. Only `body` is required; include `external_id` if your source might re-deliver the same message (it dedupes).
+
+The assistant and agents can also save messages using the `save_message` builtin.
+
+## Reading and managing messages
+
+On the Inbox page:
+
+- **Click a message** to open it in detail, read its full body, add notes, or mark it read/unread.
+- **Filter by source** — click a source chip (Email, Slack, etc.) to show only messages from that source.
+- **Mark as read/unread** — track which messages you've seen.
+- **Delete** — remove a message from your inbox.
+
+## Collections and chat context
+
+You can file messages into **collections** — the same named groups you use for artifacts, files, and to-dos. Multi-select messages and click **Add to collection** to file them. When you use a collection in Chat (via the 📚 picker), the assistant has access to the messages alongside artifacts, files, and tasks.
+
+This is useful when you want to chat with a team about a set of messages — e.g., "summarize all these customer emails" or "help me reply to these support requests."
+
+## Sharing and collaboration
+
+- **Private messages** — only you (and admins) can see or edit them.
+- **Workspace messages** — everyone on your team can see them, file them into collections, and add notes.
+
+When a message is workspace-visible, your team sees it immediately.
+
+## Automating on incoming messages
+
+When a message arrives in your inbox, it emits an event that can trigger an automation rule (a **listener**). For example:
+
+- *"When a WhatsApp message arrives in the **Support** collection, run the **Triage** agent"*
+- *"When an email from a specific domain arrives, file it into the **Leads** collection"*
+
+See [Automation & Listeners](/docs/using/automation) for how to set up these rules.

@@ -1,14 +1,48 @@
 ---
-title: Automation
-description: Let SupaNet react to events and do work on a schedule.
+title: Automation & Listeners
+description: Let SupaNet react to events, respond to incoming messages, and run work on a schedule.
 ---
 
 SupaNet does not only work when you are typing at it. It can react to things
-happening elsewhere and run jobs on a timer. You do not need to build any of
-this yourself - this page is just so you know what is possible and can ask for
-it.
+happening elsewhere, process incoming messages, and run jobs on a timer. You do
+not need to build any of this yourself - this page is just so you know what is
+possible and can ask for it.
 
-## Reacting to events (webhooks)
+## Listeners: react to events
+
+A **listener** is an automation rule: "when *this* happens, *do this*." SupaNet
+emits events whenever something meaningful happens — an artifact is created, a
+file is uploaded, a message arrives, or something is filed into a collection.
+
+On the **Listeners** page (`/listeners`), you set up rules. For example:
+
+- *"When a new file arrives in the **Data** collection, run the **Analyzer** agent to summarize it."*
+- *"When a message arrives from Slack, file it into the **Support inbox** collection."*
+- *"When a to-do is marked complete, log it for later review."*
+
+Each listener specifies:
+
+- **Event** — what you're listening for (e.g., `file.created`, `message.received`, or a wildcard like `*`).
+- **Filters** (optional) — narrow it down (e.g., only in a specific collection, only from a specific source).
+- **Action** — what to do when it matches:
+  - **Run an agent** — call an agent with the event data as context.
+  - **Run a tool** — invoke a tool directly (no model).
+  - **Add to collection** — file the thing into a collection.
+  - **Log** — record the match (useful for testing).
+
+The **Events** page (`/events`) shows you the live stream of everything happening
+in your workspace — so you can see which events are firing and test your listeners
+before turning them on.
+
+## Reacting to incoming messages
+
+The **Inbox** is where all your messages live — email, Slack, WhatsApp, or anything you push in. When a message arrives, it emits an event, so you can set up a listener to react to it.
+
+For example, you might listen for `message.received` and run a triage agent to categorize it, or file all Slack messages into a collection automatically.
+
+See [Inbox](/docs/using/inbox) for how messages flow in.
+
+## Reacting to webhooks
 
 Other systems can send information into SupaNet through a **webhook** - a private
 address that, say, your form tool or your CRM posts to when something happens.
@@ -17,6 +51,10 @@ SupaNet can then run a prompt or an agent against whatever came in.
 In plain terms: "when a new lead arrives, summarise it and file it" or "when this
 form is submitted, check it and flag anything odd." The event arrives, SupaNet
 does the work, and it is all recorded.
+
+This is more direct than listeners — the webhook has its own configuration and
+can run immediately, whereas listeners react to internal events. Use webhooks for
+external systems; use listeners for things happening inside SupaNet.
 
 ## Running on a schedule
 
@@ -29,8 +67,9 @@ keeps happening.
 ## The activity feed
 
 Whenever SupaNet does something on its own - uses a tool, processes a webhook,
-runs a scheduled job - it writes a line to the **activity feed**. This gives you
-a live, running record of what the system has been up to.
+runs a scheduled job, or dispatches a listener - it writes a line to the
+**activity feed**. This gives you a live, running record of what the system has
+been up to.
 
 Chat failures are also logged to the activity feed, so if something goes wrong
 when you send a message, you'll see what happened without having to dig around.
@@ -42,6 +81,7 @@ and admins can see everything across the workspace.
 ## Why you would care
 
 Automation is what turns SupaNet from "a chat I visit" into "a teammate that is
-always on." The chat is for when you are present; webhooks and schedules are for
-when you are not. If you find yourself doing the same small task over and over,
-that is usually a sign it could be automated - ask whoever runs your workspace.
+always on." The chat is for when you are present; webhooks, schedules, and
+listeners are for when you are not. If you find yourself doing the same small
+task over and over, that is usually a sign it could be automated - ask whoever
+runs your workspace.
