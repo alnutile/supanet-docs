@@ -1,0 +1,40 @@
+---
+title: Feature flags
+description: Hide or show sidebar areas across the entire workspace.
+---
+
+Feature flags let admins hide or show sidebar areas across the entire workspace. This is useful when your team doesn't use certain features, or when you're trying something out and don't want to overwhelm staff with extra options.
+
+## What feature flags do
+
+A feature flag **hides a sidebar area and removes it from search** (the ⌘K palette). It is *not* a permission control or a security boundary — hiding a feature just removes the link. Row-level security still protects the data, so if someone navigates directly to the URL, the page still works as it normally would.
+
+## Setting up feature flags
+
+The **Feature flags** settings page (admin-only, under Settings in the sidebar) shows all the areas that can be toggled:
+
+- Each sidebar area (except Home, Chat, and Settings) can be turned on or off.
+- **Enabled** areas show up in the sidebar and search. 
+- **Hidden** areas are removed from navigation but still accessible by direct URL.
+
+Toggle any area on or off. The change applies instantly across the entire workspace — everyone's sidebar updates live.
+
+## Which areas can be hidden
+
+All feature areas can be hidden except:
+
+- **Home** — you need somewhere to land
+- **Chat** — the core feature
+- **Settings** — admins need to reach the very page that manages the flags
+
+Admin-only features (Forge, Security, Usage, etc.) are marked as such. A non-admin can never see an admin-only area, whether or not its flag is on. The flag only controls hiding for people who *can* see it.
+
+## When to use this
+
+Turn an area off if:
+
+- Your team doesn't use that feature (e.g., you don't use Loops, so hide the Loops area).
+- You're rolling out a feature gradually and don't want it visible yet.
+- You want to reduce cognitive load by hiding less-common features.
+
+Turn it back on anytime.

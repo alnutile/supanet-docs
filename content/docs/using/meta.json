@@ -19,6 +19,7 @@
     "slack",
     "loops",
     "automation",
+    "feature-flags",
     "whats-possible"
   ]
 }
