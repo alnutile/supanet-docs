@@ -37,14 +37,24 @@ The same agent can run in three contexts:
 
 ## Collections bound to an agent
 
-When you bind collections to an agent, their contents — artifacts, files, and
-to-dos — are injected as primary context whenever the agent runs. This happens
-in all three contexts: chat, webhooks, and schedules. The user's manually picked
-collections (if any) are merged with the agent's bound collections.
+When you bind collections to an agent, their contents — artifacts, files,
+to-dos, links, tables, and even other agents — are injected as primary context
+whenever the agent runs. This happens in all three contexts: chat, webhooks, and
+schedules. The user's manually picked collections (if any) are merged with the
+agent's bound collections.
 
 This is how you give an agent a persistent knowledge set. For example, an agent
 that processes incoming tickets can be bound to a collection of templates and
 guidelines it should follow every time it runs.
+
+## Filing agents into collections
+
+Agents can themselves be filed into collections just like artifacts, files,
+to-dos, links, and tables. You can organize related agents on the Agents page
+by multi-selecting them and clicking **Add to collection**, or add them one at
+a time from a collection's dashboard. This lets you keep specialized agents
+grouped by project, workflow, or purpose, making it easy to discover which
+agents are available and give the assistant a directory of capabilities.
 
 ## Why scope tools per agent
 
