@@ -43,6 +43,20 @@ Each artifact has a visibility setting:
 When something is unlisted or public, the link works for people who are not even
 signed in to SupaNet.
 
+### Optional password protection
+
+When you share an artifact (unlisted or public), you can require viewers to enter a
+password before they can see it. This is useful for handing someone a link plus a
+password — like sharing a document with a customer or partner.
+
+To set a password, open the artifact editor, go to the **Sharing** panel, and click
+**Add password** (or **Change** if one is already set). The password is stored securely
+with bcrypt hashing — viewers enter it once when they follow the link, and the artifact
+loads only if they get it right. Incorrect passwords are indistinguishable from a
+broken link, so there's no way to guess or brute-force it.
+
+You can remove the password anytime, making the artifact accessible by link alone again.
+
 ## Interactive HTML artifacts
 
 HTML artifacts can be more than static pages. The assistant can create **live,
