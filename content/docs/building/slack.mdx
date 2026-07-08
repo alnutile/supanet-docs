@@ -3,21 +3,32 @@ title: Slack
 description: Architecture and implementation of the Slack bot and channel bindings.
 ---
 
-The Slack integration lets the workspace bot join Slack channels and answer @mentions using collection context - the same architecture as [webhooks](/docs/building/webhooks) but triggered by Slack events instead of HTTP calls.
+The Slack integration lets the workspace bot join Slack channels and answer @mentions using collection context - the same architecture as [webhooks](/docs/building/webhooks) but triggered by Slack events instead of HTTP calls. In **ambient mode**, the bot listens to all channel messages and a cheap model decides whether to chime in unprompted (Claude-Tag style).
 
 ## Overview
 
 ```
-Slack (app_mention) 
+Slack (app_mention or message event)
   └─► slack-events edge function (public, verify_jwt=false)
         1. Verify X-Slack-Signature HMAC (signing secret from Vault)
         2. Dedupe on event_id (unique insert into slack_events audit log)
         3. Ack 200 within 3 seconds, then in the background:
-             binding = slack_channel_bindings[channel_id]
-             system = agent.instructions (or default) + loadCollectionsContext(...)
-             guardrails (webhook context, fail closed)
-             agent loop (collections context + tools if allowed)
-             reply via chat.postMessage into the thread
+
+For @mentions (app_mention event):
+  binding = slack_channel_bindings[channel_id]
+  system = agent.instructions (or default) + loadCollectionsContext(...)
+  guardrails (webhook context, fail closed)
+  agent loop (collections context + tools if allowed)
+  reply via chat.postMessage into the thread
+
+For plain messages in ambient channels (message event):
+  binding = slack_channel_bindings[channel_id] where mode='ambient'
+  if capture_messages: save to inbox (source='slack')
+  if message @mentions bot: skip (app_mention event handles it)
+  if prefilter fails (trivial message): skip
+  decision_model = binding.gate_model || workspace.utility_model
+  verdict = decision_model(message, channel_context, participation_prompt)
+  if verdict.respond: run same reply flow as @mention above
 ```
 
 ## Tables
@@ -37,6 +48,10 @@ Credentials live only in Vault. The RPC `set_slack_integration(p_bot_token, p_si
 - `owner_id` - the user the binding runs as (their access controls apply)
 - `allow_tools` - deterministic gate, mirroring `webhooks.allow_tools`
 - `is_active` - pause a binding without deleting it
+- `mode` - `'mention'` (default) or `'ambient'` (listen to all messages and decide when to chime in)
+- `participation_prompt` - guidance text steering when to speak in ambient mode (e.g. "jump in on billing questions")
+- `gate_model` - optional OpenRouter slug for the ambient decision model; null falls back to workspace `utility` profile
+- `capture_messages` - when true, save channel messages into the unified inbox even if the bot stays silent
 
 Every member can read bindings (it's a workspace surface); admins create/update/delete them. A new binding runs as its creator - so the bot inherits the creator's access to collections and tools.
 
@@ -123,6 +138,12 @@ Pure logic for testing:
 - **`shouldSkipEvent(event)`** - returns a skip reason or null: filters bot messages, edits, empty text, missing user/channel
 - **`formatTranscript(messages, nameMap, excludeTs?)`** - render recent messages as "name: text" lines, skip the triggering message
 
+Ambient mode helpers:
+- **`mentionsBot(text, botUserId?)`** - returns true if the text @mentions the bot; those arrive as their own `app_mention` event, so the ambient path skips them (no double reply)
+- **`passesAmbientPrefilter(text)`** - heuristic gate run BEFORE the model, filters out trivial messages (short, emoji-only, links, etc.) so busy channels don't cost a model call per message
+- **`buildParticipationSystem(guidance)`** - system prompt for the ambient decision model, with "default to silent" posture and channel-specific guidance
+- **`parseParticipationVerdict(text)`** - parses the decision model's JSON verdict `{respond: boolean, reason: string}`, fails silent on errors (false positive spam is worse than a miss)
+
 All unit-tested in `supabase/functions/tests/slack_test.ts`.
 
 ## RPC functions
@@ -173,6 +194,7 @@ The binding's creator (`owner_id`) is the identity the bot runs as. Bind workspa
 ## Future directions
 
 - **DMs** - handle `message.im` (direct messages to the bot) and answer with the DM-er's own context (private collections, their files)
-- **`send_slack_message` builtin** - agents can proactively post into bound rooms ("ambient" behavior, like scheduled email)
+- **`send_slack_message` builtin** - agents can proactively post into bound rooms
 - **In-channel commands** - `/slash` commands to manage bindings without leaving Slack
-- **Memory** - file notable channel messages back into the bound collection so the bot "remembers"
+- **Per-thread cooldown** - rate limit ambient replies in a single thread to avoid spam
+- **Display name resolution** - captured inbox messages currently store the raw Slack user id; resolve to display names for better readability
