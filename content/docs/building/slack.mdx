@@ -185,6 +185,17 @@ All unit-tested in `supabase/functions/tests/slack_test.ts`.
 
 The binding's creator (`owner_id`) is the identity the bot runs as. Bind workspace-visibility collections for shared rooms so the answer respects what everyone already has access to.
 
+## Editing a binding
+
+Click **Edit** on an existing binding's card to modify its settings. The form preserves the current values and allows you to update:
+- Collections the room can access
+- The agent (including ambient-mode-specific settings)
+- Allow/disallow tools
+- Participation prompt and gate model (for ambient bindings)
+- Message capture setting
+
+The channel ID and owner are immutable. To move a binding to a different channel, delete it and create a new one.
+
 ## Usage tracking and auditing
 
 - **`slack_events` table** - admin-readable audit log of every mention (who, channel, status, transcript/reply)
