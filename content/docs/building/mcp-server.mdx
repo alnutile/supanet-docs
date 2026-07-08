@@ -48,6 +48,12 @@ The server exposes build tools so an outside Claude can populate your workspace:
   data tables programmatically)
 - the matching `list_*` tools
 
+### External MCP tools
+
+Connected external MCP servers (e.g. Playwright for browser automation) are also exposed in `tools/list` with unified namespacing (e.g. `playwright__browser_navigate`). This means external AI gets both the workspace's build tools and any browser/integration tools at a single endpoint. See [Playwright (browser automation) over MCP](/docs/building/playwright-mcp) for details.
+
+### Looping system
+
 It also exposes the **looping system** so you can create and run goal-directed loops from
 an external Claude:
 

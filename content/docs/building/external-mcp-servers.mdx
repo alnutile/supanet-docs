@@ -65,6 +65,14 @@ function executing the tool call.
   decision to use a tool still respects agent `tool_ids` scoping and the
   `webhooks.allow_tools` gate (webhooks run read-only by default).
 
+## Re-exposure to external AI
+
+Connected external servers are also re-exposed through the workspace's own MCP server. When you connect an external Claude (Claude Desktop, Claude Code) to the workspace MCP endpoint, the `tools/list` response includes both the workspace's built-in authoring tools and the connected external tools (e.g. Playwright browser tools), all with unified namespacing (`‹label›__‹remote›`).
+
+This means you can sit in Claude Desktop with a Playwright MCP server connected to SupaNet, and the same browser automation tools your agents use are available in your desktop Claude — through a single endpoint.
+
+See [Playwright (browser automation) over MCP](/docs/building/playwright-mcp) for a detailed example.
+
 ## Phase 2 (planned, not built)
 
 In future:

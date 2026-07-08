@@ -15,6 +15,7 @@
     "security",
     "mcp-server",
     "external-mcp-servers",
+    "playwright-mcp",
     "webhooks",
     "slack",
     "email",
