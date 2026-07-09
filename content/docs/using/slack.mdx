@@ -72,6 +72,8 @@ When you bind a channel, a new **Ambient mode** section appears:
 - **Decision model** (optional) — Any OpenRouter slug (e.g. `anthropic/claude-haiku-4.5`). Leave blank to use the workspace utility model (cheapest).
 - **Save messages to the Inbox** — Capture every message into Inbox for search and event listeners, even when the bot doesn't reply.
 
+**Important: Before enabling ambient mode**, you must subscribe your Slack app to the channel message events. Slack only sends the bot @mentions by default — ambient mode requires it to receive all messages. Go to [https://api.slack.com/apps](https://api.slack.com/apps) → your app → *Event Subscriptions* → *Subscribe to bot events* → *Add Bot User Event* → add `message.channels` for public channels (and `message.groups` for private channels too) → *Save Changes*. No reinstall needed — these events use scopes the bot already has and start flowing immediately. Apps created from the current manifest in Settings (the "Copy app manifest" button) already include these events.
+
 ### Cost and noise
 
 Ambient is **opt-in per channel** — existing mention-only bindings are untouched. The pre-filter + the "default to silent" guidance + the cheap decision model keep it affordable. A very busy ambient channel will make one cheap model call per non-trivial message. Point the decision model at Haiku or another cheap OpenRouter option to tune costs.
