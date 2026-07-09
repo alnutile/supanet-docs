@@ -1,0 +1,100 @@
+---
+title: User Memory
+description: How per-user memory works and how to integrate it with agents and automation.
+---
+
+Per-user memory is a durable personal profile stored in the `user_memories` table. The assistant reads and writes it through builtin tools, and the chat and scheduler loops auto-inject it into the system prompt so new conversations start with context already in place.
+
+## Design
+
+Memory is **owner-only** (like `conversations`, `messages`, and `files`), not the private/workspace collaboration model. One user's memories never leak into another's context.
+
+### Table
+
+```sql
+CREATE TABLE public.user_memories (
+  id uuid primary key,
+  owner_id uuid not null references auth.users (id),
+  content text not null,
+  key text,  -- optional stable slug for upsert-in-place
+  category text not null default 'general',
+  pinned boolean not null default false,
+  source jsonb not null default '{}',
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+CREATE UNIQUE INDEX user_memories_owner_key_uidx
+  ON public.user_memories (owner_id, key) WHERE key IS NOT NULL;
+```
+
+The `key` column is optional and unique per owner. When set, it lets the `remember` builtin upsert in place (so a refined fact overwrites instead of duplicating).
+
+### RLS
+
+Memory is owner-only — `owner_id = auth.uid()` on all policies. No workspace sharing.
+
+### Realtime
+
+The table is in the `supabase_realtime` publication, so the MemoryPage (route `/memory`) sees live updates when the assistant writes memories.
+
+## Integration
+
+### Builtin tools
+
+Four seeded `is_builtin` tools (in `_shared/memory.ts`):
+
+- **`remember`** — save a fact with optional `key`, `category`, and `pinned`.
+- **`list_memories`** — read what you remember about the user (with optional `category` or `query` filter).
+- **`update_memory`** — patch a memory by id or key.
+- **`forget`** — delete a memory by id or key.
+
+All four run through `runBuiltin()` in the chat, scheduler, and webhook loops, and are exposed by the MCP server so internal and external Claudes use one code path.
+
+### Chat loop
+
+The chat function (route `/functions/v1/chat`) imports `loadUserMemories` and injects the user's memories after any collection context:
+
+```ts
+const memoryContext = await loadUserMemories(db, userId)
+if (memoryContext) system += `\n\n---\n\n${memoryContext}`
+```
+
+The `formatMemoriesBlock()` function renders memories as a markdown list, pinned-first, and caps the output to ~8k chars (~2k tokens) to avoid crowding the conversation.
+
+### Scheduler loop
+
+Scheduled agents use the same `loadUserMemories()` so standing preferences and defaults apply automatically when an unattended agent runs.
+
+### Webhook and Slack loops
+
+Webhooks and Slack messages **don't** auto-inject memories (they face external callers). Memory is personal and must not bleed into a reply to an untrusted source. Those agents can still call `list_memories` and `remember` if the operator explicitly scopes them in (via agent `tool_ids`).
+
+### Events and automation
+
+Every write to `user_memories` emits an `events` row (`memory.created` or `memory.updated`) at `private` visibility through the `emit_memory_event()` trigger. This lets automation listeners react to memory changes and bi-directionally write memory via `run-tool → remember` (a listener can save a memory in response to any event).
+
+## How to use it with agents
+
+An agent can read and write the caller's memory:
+
+1. **List** what you know about them: `list_memories()`.
+2. **Decide** if anything new is worth saving (durable, reusable, not a secret).
+3. **Remember** it with a stable `key` so refined facts update in place.
+4. **Update** or **forget** as the user teaches you.
+
+The builtin tools re-scope all queries to the caller's `owner_id` in code, so agents always work with the right user's memory even though they run with the service role.
+
+## Testing
+
+The pure block formatter (`formatMemoriesBlock`) is unit-tested in `supabase/functions/tests/memory_test.ts` to ensure correct truncation, pinning order, category tagging, and blank-line skipping. The test is import-side-effect-free so it doesn't require database mocking.
+
+## Limits
+
+- **Content max**: 2000 chars per memory.
+- **List default**: 50 memories (max 200).
+- **Inject budget**: ~8k chars (newest/pinned-first, truncated with a note if over budget).
+
+## Schema reference
+
+Migration 0069 creates the table, RLS policies, events trigger, seeded builtin tools, and an always-on "User memory" prompt that teaches the save/skip discipline.

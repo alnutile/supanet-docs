@@ -19,6 +19,7 @@
     "webhooks",
     "slack",
     "email",
+    "memory",
     "data-model",
     "teach-supanet-about-itself"
   ]

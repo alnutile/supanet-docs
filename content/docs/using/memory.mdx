@@ -1,0 +1,90 @@
+---
+title: Memory
+description: Store durable facts about yourself so the assistant remembers them across chats.
+---
+
+**Memory** is a persistent personal profile the assistant carries across conversations. Instead of starting each chat from scratch, the assistant has access to facts about you — your name, preferences, timezone, projects, standing defaults — so new conversations start warm, with context already in place.
+
+## Why memory is useful
+
+Memory eliminates repetition and makes every conversation more personal:
+
+- **No re-asking** — you don't have to remind the assistant of your name, timezone, or preferred communication style on every new chat.
+- **Standing preferences** — the assistant knows you prefer metric units, bullet points, or a particular tone.
+- **Project context** — ongoing work, accounts you own, clients you manage — the assistant is already caught up.
+- **Identity** — your role, team, the stack you use.
+
+## Where to find your memories
+
+On the sidebar under **Assets**, select **Memory**. You'll see all your remembered facts in a list, with options to add, edit, and delete them.
+
+## Adding a memory
+
+Click the text input at the top and type a durable fact about yourself (e.g., "I prefer answers in metric units" or "I manage the Acme account"). Choose a category from the dropdown — **general**, **preference**, **fact**, **context**, or **project** — then click **Add**.
+
+The memory is saved right away and will be injected into the system prompt of every new chat you start.
+
+## Organizing memories
+
+Memories are sorted by:
+
+1. **Pinned** — important facts pinned to the top.
+2. **Recently updated** — what you've changed most recently.
+
+### Categories
+
+Categories are just tags to help you organize your thoughts:
+
+- **general** — catch-all (the default).
+- **preference** — how you like things done ("answer in bullet points").
+- **fact** — fixed information ("name is Alfred").
+- **context** — ongoing projects or roles.
+- **project** — a specific project you're working on.
+
+You can create custom categories too — the assistant will learn and use them.
+
+### Pinning
+
+Click the **pin icon** next to a memory to pin it. Pinned memories are always injected first into the assistant's context, so they take priority when space is tight.
+
+## Editing and deleting
+
+Click on the memory text to edit it. Hit **Enter** or click outside the input to save.
+
+Click the **trash icon** (visible on hover on desktop, always visible on mobile) to forget a memory.
+
+## How memory works in chat
+
+When you start a new chat, SupaNet injects all your memories into the system prompt under a "What you remember about this user" heading. The assistant treats them as already-known background — not something to re-ask.
+
+Memory is **private to you** — the assistant can't see another user's memories, and your memories never appear in shared chats.
+
+## Naming and updating
+
+You can optionally give a memory a stable **key** — a slug like `preferred_name` or `tone` — so the assistant can update it in place instead of creating duplicates. For example:
+
+- First chat: "Remember: preferred name is Al."
+- Later chat: "Update my preferred name to Alfred."
+
+The assistant uses the same key to overwrite instead of piling up two memories.
+
+## What the assistant remembers
+
+The assistant stores memories when you teach it something durable:
+
+- **Your identity**: name, role, team, timezone.
+- **Your tools**: programming languages, frameworks, the stack you prefer.
+- **Your preferences**: communication style, output format, tone.
+- **Your work**: projects you're on, accounts you manage, clients.
+
+The assistant **doesn't** store:
+
+- **Secrets**: passwords, API keys, or anything sensitive.
+- **One-offs**: details that won't matter next time.
+- **Repetition**: if it's already remembered, it updates instead.
+
+## Scheduled runs and automation
+
+When you schedule an agent or task, it runs with your memories already injected, so your standing preferences and defaults apply automatically.
+
+Webhooks and external callers don't get your memories — they only see your memories if they explicitly ask the agent to read them via tools. This protects your privacy when external sources trigger automations.
