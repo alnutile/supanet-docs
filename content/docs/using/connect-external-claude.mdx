@@ -1,0 +1,60 @@
+---
+title: Connect Claude to your workspace
+description: Use Claude Code or Claude Desktop to push artifacts, notes, and automations into SupaNet.
+---
+
+You can connect an external Claude (Claude Code on your laptop or Claude Desktop) directly to your SupaNet workspace. This lets you use Claude's native tools and your own environment while sending the results — artifacts, notes, files, tasks — directly into your team's workspace.
+
+## Why you'd do this
+
+- **Create and share from outside the app** — draft an artifact in Claude Desktop and send it to the workspace.
+- **Automate intranet tasks** — a script or Claude Code session can push documents, notes, and files into SupaNet with a single command.
+- **Integrate your own tools** — use Claude with Playwright, execute code, fetch external data, then file the results into collections.
+
+## Getting connected
+
+1. Go to **Settings → Connect Claude** in your SupaNet workspace.
+2. You'll see two snippets:
+
+   - **Claude Code**: a `claude mcp add` command for your terminal
+   - **Claude Desktop**: a JSON block to paste into your `claude_desktop_config.json`
+
+3. Follow the snippet for your setup.
+
+Each connection method uses a **per-user token** — your workspace is protected, and everything you push runs as you.
+
+## What you can do
+
+Once connected, the `intranet` MCP server exposes tools to build and manage your workspace:
+
+- **Create & edit artifacts** — save markdown, code, HTML, or plain text. Returns a shareable link.
+- **Push files** — persist images, PDFs, and other output you generate. Get back a signed URL.
+- **Manage to-dos** — create tasks, mark them done, set due dates, file them into collections.
+- **Save links** — paste a URL and metadata (title, description, preview) are fetched automatically.
+- **Add notes** — push transcripts, meeting notes, or research into the knowledge base.
+- **Query & edit tables** — work with real Postgres data tables from your local environment.
+- **Build automation** — create agents, tools, webhooks, and scheduled runs.
+
+The workspace re-enforces access the same way it does for in-app users: you can only work with content you own or that's shared with the team.
+
+## A quick example
+
+In Claude Code, once connected:
+
+```
+@artifact - create me a clean HTML dashboard showing revenue trends
+```
+
+Claude will use `create_artifact` to save the dashboard directly into your SupaNet workspace and return the share link.
+
+Or pull data from a table, manipulate it outside, and push the results back:
+
+```
+@artifact - query the "leads" table, sort by close probability, save the top 10 to a file
+```
+
+## Where to learn the details
+
+Settings → Connect Claude also gives you access to a comprehensive **intranet-workspace skill**. If you're using Claude Code or Claude Desktop, grab that skill — it's a full reference of all the tools, with patterns for filing into collections, searching the knowledge base, and more.
+
+For the MCP server architecture, see the [Building on SupaNet](/docs/building/mcp-server) docs.

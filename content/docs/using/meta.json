@@ -18,6 +18,7 @@
     "secrets-vault",
     "security",
     "skills-and-prompts",
+    "connect-external-claude",
     "slack",
     "loops",
     "automation",
