@@ -16,10 +16,12 @@ The schema lives in `supabase/migrations`. The main tables:
 - `documents`, `document_chunks` - the PDF knowledge base (chunks live in
   `pgvector`).
 - `collections`, `collection_artifacts`, `collection_files`, `collection_todos`,
-  `collection_tables` - named groups of content you can scope a chat to.
+  `collection_tables`, `collection_terminology` - named groups of content you can
+  scope a chat to.
 - `user_tables` (and `ut_*` physical tables) - the real Postgres tables feature
   (Airtable-but-real-Postgres).
 - `todos` - tasks and checklists.
+- `terminology` - glossary of terms and definitions.
 - `skills` - both always-on prompts and on-demand skills.
 - `tools`, `agents`, `guardrails` - the configurable capabilities.
 - `webhooks`, `webhook_events` - inbound triggers and their log.
