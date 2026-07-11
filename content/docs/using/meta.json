@@ -21,6 +21,7 @@
     "connect-external-claude",
     "slack",
     "loops",
+    "evals",
     "automation",
     "feature-flags",
     "whats-possible"

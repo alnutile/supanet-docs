@@ -1,0 +1,129 @@
+---
+title: Evals
+description: Regression test your AI pipeline with Promptfoo-style suites to catch quality drops when you swap models or edit prompts.
+---
+
+An **eval** is a regression test for your AI pipeline. Instead of shipping a prompt change or model swap blindly, you define a suite of test cases — questions paired with reference answers — run your pipeline through each one, and score the outputs against your expectations. Evals catch quality drops before they reach your users.
+
+## Why evals matter
+
+A one-off chat with Claude works great. But when you:
+
+- Swap to a cheaper model to save money
+- Edit a system prompt to try a new tone
+- Add a new tool to an agent
+- Ground answers in different collections
+
+…you need confidence the change did not make things worse. Evals automate that confidence check.
+
+## Eval targets
+
+An eval suite tests one of three things:
+
+### Chat suites
+Test the base chat pipeline (the always-on prompts, the assistant's tools, and live web search). Each case is a question; you score the answer against a reference and an optional rubric.
+
+### Agent suites
+Like chat, but the cases run through a specific agent's prompt and tools instead. Useful when an agent is mission-critical and you want to catch regressions in its behavior.
+
+### RAG suites
+Test whether a document search + retrieval pipeline returns the right passages. Each case is a query; assertions deterministically check whether the top-K retrieved chunks contain the expected documents or phrases. No model, no judging — pure retrieval metrics.
+
+## Creating a suite
+
+1. Go to the **Evals** dashboard (under Admin in the sidebar if evals are enabled).
+2. Click **New suite**.
+3. Pick a name, optional description, and a target (chat, agent, or rag).
+4. For **agent suites**, pick the agent.
+5. For **chat/agent suites**, optionally select **grounding collections**. When you do, each case is answered using **only** that collection's content as context — so you can test "does the assistant answer correctly out of THIS knowledge set?"
+6. For **chat/agent suites**, optionally set a custom **judge model** (how the judge grades answers; blank uses a fast default) and a **rubric** (instructions for the judge; blank is sensible).
+
+Once the suite exists, add cases.
+
+## Adding test cases
+
+Bulk-add cases in one import:
+
+1. Click **Add cases**.
+2. Paste or upload:
+   - **For chat/agent**: questions (input) and reference answers (expected).
+   - **For RAG**: queries (input) and assertions (e.g., "document 'FAQ.pdf' should be in top 5 results").
+3. Each case can also have assertions — statements the answer must satisfy (contains "yes", matches a regex, does not leak secrets, etc.).
+
+Cases are added all at once, so building a dataset from existing docs or test logs is fast.
+
+## Running an eval
+
+When you are ready to measure:
+
+1. Hit **Run** to score all cases against the current pipeline.
+2. Watch the progress live — passed cases, failed cases, per-case scores.
+3. When done, you get a pass rate, cost, and a drill-down into each result.
+
+That's a single run. For a **model comparison**, use **Compare models**:
+
+1. In the suite editor, enter model slugs (comma or newline separated), e.g., `anthropic/claude-sonnet-4.5, anthropic/claude-haiku-4.5, openai/gpt-4o`.
+2. Hit **Compare**.
+3. Evals spins up one background run per model, then shows a side-by-side scorecard — best score first — so you can see which model actually wins on your test cases, not just on benchmarks.
+
+## Assertions
+
+Assertions are deterministic checks on the output. Use them alongside the judge's grade:
+
+- **`{"type":"contains","text":"..."}`** — the answer must mention this phrase (case-insensitive).
+- **`{"type":"not_contains","text":"..."}`** — the answer must NOT mention this phrase (guards against leaks or unwanted behavior).
+- **`{"type":"regex","pattern":"..."}`** — the answer must match this regex (case-insensitive).
+- **`{"type":"retrieves","doc":"..."}`** — (RAG only) the query retrieved a document with this name.
+- **`{"type":"recall_at_k","doc":"...","k":5}`** — (RAG only) the document appears in the top K results.
+
+All cases run through assertions; the judge (for chat/agent) grades against the reference answer and rubric on top of that.
+
+## Grounding in collections
+
+When you bind a suite to one or more collections, each case runs with **only** that collection's content injected as context. This answers a real question: "If I train on THIS dataset, do I get good answers?"
+
+For example:
+
+- Create a **Support FAQ** collection with your help docs.
+- Create a **support-chat** eval suite and ground it in **Support FAQ**.
+- Run cases: "How do I reset my password?", "What payment methods do you accept?"
+- The eval runs the assistant with only the FAQ visible, so you know the assistant can answer your common questions from your docs alone.
+
+This is more realistic than testing the whole knowledge base — it measures whether a scoped, curated context makes the difference.
+
+## Running evals from chat
+
+The in-app assistant can also create and manage evals. Use these tools:
+
+- **`list_evals`** — see all eval suites, their targets, and latest pass rates.
+- **`create_eval_suite`** — define a new suite (name, target, optional agent/collections/rubric).
+- **`add_eval_cases`** — bulk-add cases (questions + expected answers / assertions).
+- **`run_eval`** — kick off a suite run, optionally comparing several models. Returns a run ID.
+- **`get_eval_run`** — check on a running or finished run. Pass a run ID or a suite name to see the latest run(s) and model comparison.
+
+This means you can ask the assistant "create an eval suite for my support agent with 10 test cases from our FAQ, then compare Claude 3.5 Sonnet vs. Haiku" — and it builds and runs the suite for you.
+
+## When to eval
+
+- **Before pushing a prompt change** — is the new tone actually better on your actual cases?
+- **Before swapping models** — does the cheaper model score as well?
+- **Before trusting a new agent** — what is the baseline pass rate?
+- **When grounding in a new collection** — does scoping to that content hurt or help?
+- **On a schedule** — run nightly to catch regressions before they hit production.
+
+Evals are cheap (mostly deterministic checks + an optional judge call), so running them often is fine.
+
+## Cost
+
+Each chat/agent case costs one orchestrator call (to answer the question) plus one judge call (to grade it). RAG cases are free — just retrieval math. If you run 100 chat cases, that is ~200 model calls. The cost shows on the run when done.
+
+Comparing 3 models on a 50-case suite = 150 case runs × 3 models = 450 model calls. Background runs so it does not block your workflow.
+
+## What gets stored
+
+- The suite definition (name, target, rubric, collections, judge model).
+- Every case (question, expected answer, assertions).
+- Every run (status, model used, scores, cost, when finished).
+- Every result (per-case output, assertion verdicts, judge reasoning, latency).
+
+Results stay forever, so you can drill into old runs to debug a regression.
