@@ -76,14 +76,17 @@ artifact while keeping your saved state (your checked boxes, notes, choices) int
 ## Images in artifacts
 
 When you're editing an artifact, you can **paste, drag-drop, or attach an image**
-into the body. The image is uploaded to a secure public storage bucket and a
-markdown `![](url)` link is inserted at your cursor. This works like GitHub-style
-image embedding.
+into the body. The image is uploaded to private storage and a markdown `![](url)`
+link is inserted at your cursor. This works like GitHub-style image embedding.
 
-Once an image is in an artifact, the URL is permanent and doesn't expire—so the
-image stays visible when you share the artifact publicly. The images are stored
-with a location-based path (your id + a unique identifier) so they cannot be
-guessed; the security model is the same as public artifact slugs.
+**Image privacy follows artifact visibility.** When your artifact is private,
+images are private—only you can see them. When you share an artifact (unlisted or
+public), its images become visible to viewers. The storage is private by default,
+and images are accessed via temporary signed URLs (valid for 7 days) when the
+artifact is private, or via public URLs when the artifact is shared.
+
+The images are stored with a location-based path (your id + a unique identifier)
+so they cannot be guessed; the security model is the same as artifact slugs.
 
 To embed an image:
 

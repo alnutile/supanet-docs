@@ -53,6 +53,9 @@ The core patterns:
   that is exactly how anonymous `/share/a/:slug` access works.
 - **Storage** for the `files` bucket is private; policies scope objects to the
   uploading user's folder.
+- **Artifact images** (`artifact-images` bucket) are private by default; RLS
+  allows reading if the owner (by folder) *or* if the linked artifact is
+  public/unlisted. Image privacy mirrors the artifact's visibility.
 - **Knowledge sharing** is separate from file visibility. Document chunks are
   readable by the owner or when the parent document's scope is `workspace`; only
   the owner can change the scope. The raw PDF stays owner-private regardless.
