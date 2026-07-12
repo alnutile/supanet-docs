@@ -14,14 +14,18 @@ You can connect an external Claude (Claude Code on your laptop or Claude Desktop
 ## Getting connected
 
 1. Go to **Settings → Connect Claude** in your SupaNet workspace.
-2. You'll see two snippets:
+2. Generate a **New connection token** — this is your workspace credentials.
+3. Follow the instructions for your setup:
 
-   - **Claude Code**: a `claude mcp add` command for your terminal
-   - **Claude Desktop**: a JSON block to paste into your `claude_desktop_config.json`
+   - **Claude Code**: Copy the command and run it in your terminal (anywhere — `--scope user` makes it available in every project).
+     ```bash
+     claude mcp add --scope user --transport http intranet <url> --header "Authorization: Bearer <token>"
+     ```
+     Then start `claude` and run `/mcp` — you should see **intranet** connected.
 
-3. Follow the snippet for your setup.
+   - **Claude Desktop**: Open **Settings → Developer → Edit Config** and add the provided JSON block to the `mcpServers` section in your `claude_desktop_config.json`. The token is stored securely in an environment variable. Restart Claude Desktop and check the MCP icon (🔌) — you should see **intranet** connected.
 
-Each connection method uses a **per-user token** — your workspace is protected, and everything you push runs as you.
+Each connection uses a **per-user token** — your workspace is protected, and everything you push runs as you. Treat tokens like passwords; revoke them in Settings if they leak.
 
 ## What you can do
 
