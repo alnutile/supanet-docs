@@ -1,0 +1,102 @@
+---
+title: MCP OAuth connector
+description: Paste-URL-and-approve authentication for Claude's custom connector dialog.
+---
+
+SupaNet's MCP server can be connected via **OAuth 2.1 with PKCE** — letting workspace members paste the MCP URL into Claude's **Settings → Connectors → Add custom connector** dialog and click **Approve**, without copying a static token.
+
+The static `mcp_tokens` path (Settings → Connect Claude, `claude mcp add --header …`) still works unchanged. OAuth is an additional option that surfaces in Claude's native connector flow.
+
+## What the user does
+
+1. In Claude, open **Settings → Connectors → Add custom connector**.
+2. Paste the workspace MCP endpoint (e.g. `https://<project-ref>.supabase.co/functions/v1/mcp`).
+3. Leave **OAuth Client ID** and **OAuth Client Secret** empty — Claude auto-discovers and self-registers.
+4. Claude opens a login page. Sign in with **workspace email + password**.
+5. Review and approve. Done — tools appear, every call runs as that user.
+
+## How it works
+
+The OAuth flow is split across two edge functions, both public (`verify_jwt=false`):
+
+### Resource server (`mcp`)
+
+The existing MCP server gains:
+
+- **GET `/.well-known/oauth-protected-resource`** — OAuth protected-resource metadata (RFC 9728), discovered by Claude. Points to the authorization server.
+- **401 response on unauthenticated POST** — returns a `WWW-Authenticate: Bearer resource_metadata="…"` header so OAuth-capable clients know where to authenticate.
+- **Token expiry check** — rejects expired access tokens. Static tokens (no expiry) work as before.
+
+### Authorization server (`mcp-oauth`)
+
+Implements the full OAuth 2.1 + PKCE flow:
+
+- **`GET /.well-known/oauth-authorization-server`** — authorization-server metadata (RFC 8414).
+- **`POST /register`** — dynamic client registration (RFC 7591). Claude self-registers with its redirect URIs.
+- **`GET /authorize`** — renders a login page.
+- **`POST /authorize`** — processes login via the **tenant's own Supabase Auth** (password grant). The OAuth server never sees or stores the credential — it only learns who the user is.
+- **`POST /token`** — exchanges authorization codes (PKCE S256 required) or refresh tokens for access tokens.
+
+### Key properties
+
+- **Login delegates to tenant Supabase Auth** — the OAuth server never becomes the identity provider.
+- **Access tokens are `mcp_tokens` rows** — minted with `expires_at` (30 days), a `refresh_token`, and the issuing `client_id`. The resource server's existing `token → owner_id` lookup works unchanged.
+- **No hardcoding** — every endpoint URL is derived from the request host, so it works on `*.supabase.co`, a custom functions domain, or a hosted proxy.
+- **PKCE S256 required** — `plain` is rejected. Authorization codes are single-use with a 5-minute TTL, bound to `redirect_uri` + challenge.
+
+## Database backing
+
+New tables (migration `0070_mcp_oauth`):
+
+- `oauth_clients` — dynamically-registered clients (RFC 7591). Stores `client_id`, `client_name`, `redirect_uris`.
+- `oauth_authorization_codes` — short-lived single-use codes. Includes PKCE challenge + challenge method, resource and scope hints, expiry and single-use flag.
+
+Extended `mcp_tokens`:
+
+- `expires_at` — access token expiry (null = never expires, for manual static tokens).
+- `refresh_token` — opaque token for obtaining a new access token.
+- `client_id` — the OAuth client that issued this token (null = manual static token).
+
+## Testing the flow
+
+Against a deployed project (`BASE=https://<ref>.supabase.co/functions/v1`):
+
+```bash
+# 1. Discovery
+curl -s "$BASE/mcp-oauth/.well-known/oauth-authorization-server" | jq
+curl -s "$BASE/mcp/.well-known/oauth-protected-resource" | jq
+curl -s -i -X POST "$BASE/mcp" -d '{}' | grep -i www-authenticate   # 401 + pointer
+
+# 2. Dynamic Client Registration
+curl -s -X POST "$BASE/mcp-oauth/register" \
+  -H 'content-type: application/json' \
+  -d '{"client_name":"test","redirect_uris":["http://localhost:9000/cb"]}' | jq
+
+# 3. Open in a browser (PKCE: generate verifier + S256 challenge):
+#    $BASE/mcp-oauth/authorize?response_type=code&client_id=<id>&redirect_uri=http://localhost:9000/cb&code_challenge=<challenge>&code_challenge_method=S256&state=xyz
+#    → log in → redirects to the redirect_uri with ?code=…
+
+# 4. Exchange the code
+curl -s -X POST "$BASE/mcp-oauth/token" \
+  -d grant_type=authorization_code -d code=<code> -d code_verifier=<verifier> \
+  -d client_id=<id> -d redirect_uri=http://localhost:9000/cb | jq
+
+# 5. Use the access_token on a real MCP call
+curl -s -X POST "$BASE/mcp" -H "authorization: Bearer <access_token>" \
+  -d '{"jsonrpc":"2.0","id":1,"method":"tools/list"}' | jq '.result.tools | length'
+```
+
+## Discovery caveat: shared `*.supabase.co` hosts
+
+RFC 8414 and 9728 define well-known paths at the **domain root** (`https://host/.well-known/…`). On a shared `*.supabase.co` host, Supabase doesn't serve the domain root, so discovery relies on:
+
+1. The `WWW-Authenticate` `resource_metadata` header pointing to the function-scoped well-known path.
+2. The MCP client SDK falling back to function-suffixed paths.
+
+A **custom functions domain** (or a future hosted `connection.supanet.io` proxy) can serve the root paths for clients that require strict RFC compliance.
+
+## Future work
+
+- A consent screen (v1 treats successful login as consent).
+- An admin "Connections" view over `oauth_clients` and issued tokens (revoke, view usage).
+- The hosted `connection.supanet.io` proxy fronting many tenants behind one reviewed connector.

@@ -17,12 +17,14 @@ token's owner, so it is bound by the same RLS rules as that user.
 
 ## Connecting
 
-The two common clients connect differently:
+The two common clients connect differently, and each supports two auth methods:
+
+### Static token (Settings → Connect Claude)
 
 - **Claude Code** connects directly over HTTP:
 
   ```bash
-  claude mcp add --transport http <name> <url>
+  claude mcp add --transport http <name> <url> --header "Authorization: Bearer <token>"
   ```
 
 - **Claude Desktop** launches MCP servers as local processes, so it connects
@@ -31,6 +33,10 @@ The two common clients connect differently:
 Settings → Connect Claude emits both snippets for you. (The desktop snippet
 splits the auth header via an env var to dodge a known `mcp-remote` bug with
 spaces in headers.)
+
+### OAuth (Claude's "Add custom connector" dialog)
+
+Both Claude Code and Claude Desktop can also use **OAuth 2.1** — paste the MCP URL into the **Connectors** dialog and click **Approve**. This is simpler for one-off connections and allows workspace members to authenticate with their own credentials. See [MCP OAuth connector](/docs/building/mcp-oauth) for details.
 
 ## What it exposes
 

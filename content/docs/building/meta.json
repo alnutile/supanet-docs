@@ -14,6 +14,7 @@
     "guardrails",
     "security",
     "mcp-server",
+    "mcp-oauth",
     "external-mcp-servers",
     "playwright-mcp",
     "webhooks",
