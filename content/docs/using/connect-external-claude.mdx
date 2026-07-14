@@ -1,9 +1,9 @@
 ---
 title: Connect Claude to your workspace
-description: Use Claude Code or Claude Desktop to push artifacts, notes, and automations into SupaNet.
+description: Use Claude Code, Claude Desktop, or claude.ai to push artifacts, notes, and automations into SupaNet.
 ---
 
-You can connect an external Claude (Claude Code on your laptop or Claude Desktop) directly to your SupaNet workspace. This lets you use Claude's native tools and your own environment while sending the results — artifacts, notes, files, tasks — directly into your team's workspace.
+You can connect an external Claude (Claude Desktop, claude.ai, or Claude Code on your laptop) directly to your SupaNet workspace. This lets you use Claude's native tools and your own environment while sending the results — artifacts, notes, files, tasks — directly into your team's workspace.
 
 ## Why you'd do this
 
@@ -14,8 +14,26 @@ You can connect an external Claude (Claude Code on your laptop or Claude Desktop
 ## Getting connected
 
 1. Go to **Settings → Connect Claude** in your SupaNet workspace.
-2. Generate a **New connection token** — this is your workspace credentials.
-3. Follow the instructions for your setup:
+2. There are two ways to connect; the recommended method is the easiest:
+
+### Option 1: OAuth custom connector (recommended)
+
+Works in **Claude Desktop** and **claude.ai**. This method is the simplest — no tokens to copy.
+
+1. In Claude, open **Settings → Connectors → Add custom connector**.
+2. Copy the workspace MCP URL from Settings → Connect Claude and paste it.
+3. Leave **OAuth Client ID** and **OAuth Client Secret** empty — Claude will discover them automatically.
+4. Claude opens a sign-in page. Log in with your workspace **email and password**.
+5. Review and approve the connection. Done — tools appear immediately.
+
+**Note:** If you haven't set a password yet (you use magic links), go to **Settings → Profile** and set one first.
+
+### Option 2: Personal token (Claude Code or fallback)
+
+Best for **Claude Code** (the CLI), or if you prefer not to use OAuth.
+
+1. Go to **Settings → Connect Claude** and generate a **New connection token**.
+2. Follow the instructions for your setup:
 
    - **Claude Code**: Copy the command and run it in your terminal (anywhere — `--scope user` makes it available in every project).
      ```bash
