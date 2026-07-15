@@ -3,6 +3,7 @@
   "icon": "Sparkles",
   "pages": [
     "index",
+    "home",
     "chat",
     "artifacts",
     "collections",
