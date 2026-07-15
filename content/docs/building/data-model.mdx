@@ -34,7 +34,7 @@ The schema lives in `supabase/migrations`. The main tables:
 - `model_profiles` - the `orchestrator` / `utility` model bindings.
 - `integrations`, `inbox_messages` - Vault-backed email config and the inbox.
 - `usage_events` - per-call token and cost accounting.
-- `allowed_emails` - the invite allowlist.
+- `allowed_emails`, `invite_links` - the invite allowlist and shareable invite links.
 - `forged_functions` - the audit/redeploy record for Forge.
 - `vault_secrets` - Vault-backed team secrets.
 
@@ -66,8 +66,17 @@ The core patterns:
 
 The first signup becomes the admin. After that, a BEFORE INSERT guard on
 `auth.users` rejects signups unless the email is in `allowed_emails` (admin
-managed). Admins manage invites in **Settings → Invite people**. A trigger
-auto-creates a `profiles` row on signup.
+managed). Admins have two methods to invite people in **Settings → Invite people**:
+
+1. **By email:** Add an email address directly, and that person can sign up with it.
+2. **By shareable link:** Create an opaque URL token to hand out (Slack, DM, etc.).
+   When a recipient opens `/join/:token`, they can sign up with any email they
+   choose. The `redeem_invite_link` RPC allowlists that email on the fly, so the
+   same BEFORE INSERT guard still protects signups — the link just authorizes an
+   email in the moment. Links can be set to expire after a date or after a max
+   number of uses; admins can revoke or delete them anytime.
+
+A trigger auto-creates a `profiles` row on signup.
 
 ## When you change the schema
 
