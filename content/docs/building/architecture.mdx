@@ -45,6 +45,21 @@ hiding the key.
    turn limit.
 5. The reply **streams** back to the browser as server-sent events.
 
+### Server-side persistence
+
+For the main chat (not skills, card boards, or collection chats), the reply is
+also persisted server-side inside an `EdgeRuntime.waitUntil` background task.
+This means the function doesn't wait for the stream to drain before writing the
+message; instead, it finishes the model run and inserts the row independently.
+If the browser navigates away, refreshes, or the connection drops mid-reply, the
+response still lands in the database. The client's Realtime subscription surfaces
+it on remount, so the user never loses their conversation.
+
+The **Stop** button marks the specific run for cancellation (via a per-run id
+written to `conversations.cancel_requested_run`). The background task checks this
+marker between tool turns and before persisting, so clicking Stop truly halts the
+run — it is not just a local browser abort.
+
 ## Group chat
 
 A conversation can be shared with other workspace members via the **People**

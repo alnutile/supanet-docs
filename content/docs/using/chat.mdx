@@ -146,12 +146,20 @@ Just start typing to filter. Use arrow keys to navigate, Enter to jump to an
 item, and Escape to close. It is blazing fast because it searches only what you
 can see—RLS enforces access at the database level.
 
+## Your chat replies are saved even if you reload
+
+When you send a message in the main chat, the assistant's reply is saved
+server-side as it is written. If your browser refreshes, you navigate away, or
+your connection drops mid-reply, the response still lands in your conversation
+— you won't lose it. Just reload the page and you'll see the full reply.
+
 ## Stopping a response
 
 While the assistant is generating a response, the send button becomes a **Stop**
 button. Click it to cancel the response if you sent a message by accident or
 realize you want to ask something else. The partial reply is discarded and the
 user message stays in the thread, so you can ask a new question or rephrase.
+Clicking Stop truly halts the run — it doesn't just close your browser's connection.
 
 ## When chat fails
 
