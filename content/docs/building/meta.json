@@ -6,6 +6,7 @@
     "architecture",
     "deploy",
     "agents",
+    "capability-workers",
     "loops",
     "tools",
     "artifact-api-reference",

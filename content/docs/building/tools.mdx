@@ -56,6 +56,9 @@ examples include:
 - **`list_tables` / `query_table` / `add_table_row` / `update_table_row` / `create_table`** - work
   with user-created data tables. Create tables, query them for information, add rows, or update
   existing rows. The model respects the same private/workspace visibility rules as the user.
+- **`create_agent_job` / `get_agent_job` / `list_agent_jobs` / `cancel_agent_job`** - hand heavy binary
+  work (Office documents, media processing) to specialized workers. Create a durable job, poll for results,
+  and present the outputs. See [Capability workers](/docs/building/capability-workers) for details.
 
 Built-ins follow the same rules as any tool: admin activation, per-agent scoping,
 and the webhook gate all still apply.

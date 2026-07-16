@@ -1,0 +1,119 @@
+---
+title: Capability workers
+description: Hand heavy binary work to specialized Docker workers instead of running it in-process.
+---
+
+Some work shouldn't run inside the main app: producing and reading Office documents (Word/Excel/PowerPoint) and processing media (audio/video). SupaNet hands these tasks to **capability workers** — specialized Docker services that run heavy libraries against an `agent_jobs` queue.
+
+The assistant creates a durable job, a worker claims it, runs the library, uploads outputs, and the assistant continues. So the app never bundles or shells out to big binaries.
+
+## How it works
+
+**Two workers ship today:**
+
+- **office-worker** — Word/Excel/PowerPoint via LibreOffice headless (`soffice`)
+- **media-worker** — audio/video via ffmpeg
+
+The same pattern scales to PDF, OCR, browser automation, or image processing without touching the orchestration layer.
+
+### The job lifecycle
+
+1. The AI creates a durable `agent_jobs` row with `create_agent_job(operation, input_manifest, instructions, parameters)`.
+2. A worker atomically claims the job (`claim_agent_job` RPC with `FOR UPDATE SKIP LOCKED`).
+3. The worker downloads inputs from Storage (ownership re-verified), runs the operation, uploads outputs.
+4. The worker writes a `result_manifest` and marks the job `completed`; the AI reads the result and continues.
+5. If a worker dies, a lease + heartbeat recovers the job. Transient errors retry with exponential backoff (30s → 2m → 10m). Permanent errors fail immediately.
+
+IDs and manifests move through the system — never large files through the prompt.
+
+## Operations
+
+**Office operations** (`capability = office`):
+
+- `office.inspect_document` — read a docx/xlsx/pptx and return structured JSON + a markdown summary
+- `office.render_document` — convert a docx/xlsx/pptx to PNG/PDF previews
+- `office.create_docx` — author a new DOCX from instructions (+ optional template/reference files)
+- `office.convert_document` — convert to another office/PDF format
+
+**Media operations** (`capability = media`):
+
+- `media.probe` — return duration, dimensions, codecs, frame rate, streams (as a metadata artifact)
+- `media.extract_audio` — pull the audio track to wav/mp3/m4a
+- `media.extract_frames` — grab frames at given timestamps or an interval (capped at 20)
+- `media.create_thumbnail` — one representative thumbnail
+- `media.transcode` — re-encode to mp4/webm/mov/mkv/gif (allow-listed codecs)
+- `media.clip` — cut a segment
+
+## Using capability workers from chat
+
+The assistant loads the shared `Capability worker jobs` skill automatically. To use a worker:
+
+```
+1. Ask the assistant: "extract five frames from this video" or "draft the next proposal using this template"
+2. The assistant identifies the capability + operation.
+3. It calls `create_agent_job` with the operation, instructions, input references (file IDs), and parameters.
+4. It polls `get_agent_job` until the job completes.
+5. It reads the result manifest and presents the outputs.
+```
+
+The assistant passes file IDs (not contents) and operation-specific parameters (not arbitrary ffmpeg/LibreOffice arguments). Operations are allow-listed, so "run this command" never works.
+
+## Security
+
+- **Narrow operations only.** Workers expose a fixed set of operations — never a freeform "run this command". The operation is the security gate.
+- **Tenant isolation.** Every input is re-verified to belong to the job owner. A `storage_path` must sit under the owner's folder.
+- **No secrets in logs.** Structured JSON logs only. Never document contents, prompts, tokens, or env vars.
+- **Storage as source of truth.** Supabase Storage authorizes files; the worker filesystem is temporary and wiped after each job.
+
+## Provider neutrality
+
+Railway is the **first deployment target, not a hard dependency.** The worker runtime depends only on:
+
+- Postgres (Supabase service role)
+- Storage (the `files` bucket)
+- Environment variables (config)
+
+The same Docker image runs on local Docker Compose, Railway, Fly, Render, Kubernetes, or a VPS. There are no Railway SDK imports or hard-coded Railway hostnames in the worker code. Railway-specific config lives only under `infra/railway/`.
+
+### Running locally
+
+```bash
+cp infra/.env.example infra/.env   # fill in SUPABASE_URL + service role key
+docker compose -f infra/docker-compose.yml --env-file infra/.env up --build
+# health: curl localhost:8091/health (office), localhost:8092/health (media)
+```
+
+### Deploying to Railway
+
+Each worker is its own service. Set the service **Root Directory** to `workers` and the **Dockerfile path** to `<worker>/Dockerfile`. Set the environment variables (see `workers/README.md`). Railway builds and runs it automatically.
+
+The `.github/workflows/deploy-workers.yml` GitHub Action builds both images on every change and deploys when `RAILWAY_TOKEN` is configured, so workers update alongside the main app.
+
+## Built-in tools
+
+The assistant has access to these always-on tools:
+
+- **`create_agent_job`** — queue a job, returns the job id
+- **`get_agent_job`** — poll a job by id, returns its status and results (when completed)
+- **`list_agent_jobs`** — list your jobs, optionally filtered by capability or status
+- **`cancel_agent_job`** — cancel a queued or in-flight job you own
+
+All four run with the service role, but enforce ownership in code — you can only read/cancel your own jobs (admins can see all).
+
+## Architecture pieces
+
+| Piece | Location |
+| --- | --- |
+| `agent_jobs` + `agent_job_events` tables, RPCs, events, builtins | `supabase/migrations/0080_agent_jobs.sql` |
+| Pure job logic (validation, idempotency, backoff, failure policy) | `supabase/functions/_shared/agent_jobs.ts` (unit-tested) |
+| Main-AI builtins | `supabase/functions/_shared/builtins.ts` |
+| Worker runtime (claim loop, storage, lease/heartbeat, health) | `workers/shared/` |
+| Office and media operations | `workers/office-worker/`, `workers/media-worker/` |
+| Local dev + Railway config | `infra/docker-compose.yml`, `infra/railway/*.json` |
+| CI/CD | `.github/workflows/deploy-workers.yml` |
+
+## Planned
+
+- PDF/OCR/browser/image/transcription workers on the same protocol
+- A jobs UI to monitor in-flight work
+- Per-user worker tokens (workers today are workspace-scoped)
