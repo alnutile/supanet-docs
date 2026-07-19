@@ -107,6 +107,7 @@ All four run with the service role, but enforce ownership in code — you can on
 | `agent_jobs` + `agent_job_events` tables, RPCs, events, builtins | `supabase/migrations/0080_agent_jobs.sql` |
 | Pure job logic (validation, idempotency, backoff, failure policy) | `supabase/functions/_shared/agent_jobs.ts` (unit-tested) |
 | Main-AI builtins | `supabase/functions/_shared/builtins.ts` |
+| Same four tools exposed on the MCP server (external Claude / Claude Desktop can queue + poll jobs) | `supabase/functions/mcp/index.ts` |
 | Worker runtime (claim loop, storage, lease/heartbeat, health) | `workers/shared/` |
 | Office and media operations | `workers/office-worker/`, `workers/media-worker/` |
 | Local dev + Railway config | `infra/docker-compose.yml`, `infra/railway/*.json` |
