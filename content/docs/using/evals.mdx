@@ -18,25 +18,29 @@ A one-off chat with Claude works great. But when you:
 
 ## Eval targets
 
-An eval suite tests one of three things:
+An eval suite tests one of four things:
 
 ### Chat suites
-Test the base chat pipeline (the always-on prompts, the assistant's tools, and live web search). Each case is a question; you score the answer against a reference and an optional rubric.
+Test the base chat pipeline (the always-on prompts, the assistant's tools, and live web search). Each case is a question; you score the answer against a reference and an optional rubric. Can also assert which tools the assistant calls.
 
 ### Agent suites
-Like chat, but the cases run through a specific agent's prompt and tools instead. Useful when an agent is mission-critical and you want to catch regressions in its behavior.
+Like chat, but the cases run through a specific agent's prompt and tools instead. Useful when an agent is mission-critical and you want to catch regressions in its behavior. Can also assert tool usage.
 
 ### RAG suites
 Test whether a document search + retrieval pipeline returns the right passages. Each case is a query; assertions deterministically check whether the top-K retrieved chunks contain the expected documents or phrases. No model, no judging — pure retrieval metrics.
+
+### Tool suites
+Test a tool in isolation. Each case is JSON like `{"tool":"name","input":{…}}`; the runner calls the tool directly (no model) and assertions check the output text. Useful for validating that a custom HTTP tool or data-transformation builtin works correctly on known inputs.
 
 ## Creating a suite
 
 1. Go to the **Evals** dashboard (under Admin in the sidebar if evals are enabled).
 2. Click **New suite**.
-3. Pick a name, optional description, and a target (chat, agent, or rag).
+3. Pick a name, optional description, and a target (chat, agent, rag, or tool).
 4. For **agent suites**, pick the agent.
 5. For **chat/agent suites**, optionally select **grounding collections**. When you do, each case is answered using **only** that collection's content as context — so you can test "does the assistant answer correctly out of THIS knowledge set?"
 6. For **chat/agent suites**, optionally set a custom **judge model** (how the judge grades answers; blank uses a fast default) and a **rubric** (instructions for the judge; blank is sensible).
+7. For **chat/agent suites**, the **Sandbox tools** toggle (enabled by default) caps eval safety: only read-only tools like `search_documents` and `list_todos` actually execute; side-effecting tools like `create_todo`, `send_email`, and custom HTTP tools are captured but not run. This way you can assert "it called create_todo with X" and re-run the suite across a model matrix without ever mutating the workspace. Uncheck for an integration test that performs real side-effects.
 
 Once the suite exists, add cases.
 
@@ -47,8 +51,9 @@ Bulk-add cases in one import:
 1. Click **Add cases**.
 2. Paste or upload:
    - **For chat/agent**: questions (input) and reference answers (expected).
+   - **For tool**: JSON like `{"tool":"search_documents","input":{"query":"insurance"}}` (input) and optional reference output (expected).
    - **For RAG**: queries (input) and assertions (e.g., "document 'FAQ.pdf' should be in top 5 results").
-3. Each case can also have assertions — statements the answer must satisfy (contains "yes", matches a regex, does not leak secrets, etc.).
+3. Each case can also have assertions — statements the answer must satisfy. See below for assertion types.
 
 Cases are added all at once, so building a dataset from existing docs or test logs is fast.
 
@@ -70,13 +75,26 @@ That's a single run. For a **model comparison**, use **Compare models**:
 
 Assertions are deterministic checks on the output. Use them alongside the judge's grade:
 
+### Text assertions
 - **`{"type":"contains","text":"..."}`** — the answer must mention this phrase (case-insensitive).
 - **`{"type":"not_contains","text":"..."}`** — the answer must NOT mention this phrase (guards against leaks or unwanted behavior).
 - **`{"type":"regex","pattern":"..."}`** — the answer must match this regex (case-insensitive).
-- **`{"type":"retrieves","doc":"..."}`** — (RAG only) the query retrieved a document with this name.
-- **`{"type":"recall_at_k","doc":"...","k":5}`** — (RAG only) the document appears in the top K results.
 
-All cases run through assertions; the judge (for chat/agent) grades against the reference answer and rubric on top of that.
+### Retrieval assertions (RAG only)
+- **`{"type":"retrieves","doc":"..."}`** — the query retrieved a document with this name.
+- **`{"type":"recall_at_k","doc":"...","k":5}`** — the document appears in the top K results.
+
+### Tool-usage assertions (chat/agent only)
+Test which tools an assistant called. These assertions run against the full trace of tool invocations during the run:
+
+- **`{"type":"calls_tool","tool":"search_documents"}`** — the assistant must call this tool.
+- **`{"type":"not_calls_tool","tool":"send_email"}`** — the assistant must NOT call this tool (safety check: block prompt injection attacks that try to send mail).
+- **`{"type":"calls_tool_with","tool":"create_todo","arg_contains":"insurance"}`** — the assistant must call this tool with arguments matching this phrase (or use `"arg_regex"` for a regex).
+- **`{"type":"tool_call_count","tool":"search_documents","max":2}`** — the assistant must call this tool no more than N times (use `"min"`, `"max"`, or `"equals"` to set bounds).
+
+Tool-usage assertions let you validate the assistant's **behavior**, not just its output — e.g., "this prompt should make the assistant search for information before answering" or "this guardrail must block any attempt to email."
+
+All cases run through assertions; the judge (for chat/agent) grades against the reference answer and rubric on top of that. A case with only tool assertions and no reference answer passes solely on the assertion verdicts (no judge is needed).
 
 ## Grounding in collections
 
@@ -96,12 +114,12 @@ This is more realistic than testing the whole knowledge base — it measures whe
 The in-app assistant can also create and manage evals. Use these tools:
 
 - **`list_evals`** — see all eval suites, their targets, and latest pass rates.
-- **`create_eval_suite`** — define a new suite (name, target, optional agent/collections/rubric).
-- **`add_eval_cases`** — bulk-add cases (questions + expected answers / assertions).
+- **`create_eval_suite`** — define a new suite (name, target, optional agent/collections/rubric, optional sandbox_tools flag).
+- **`add_eval_cases`** — bulk-add cases (questions + expected answers / assertions, or for tool suites, tool invocations).
 - **`run_eval`** — kick off a suite run, optionally comparing several models. Returns a run ID.
-- **`get_eval_run`** — check on a running or finished run. Pass a run ID or a suite name to see the latest run(s) and model comparison.
+- **`get_eval_run`** — check on a running or finished run. Pass a run ID or a suite name to see the latest run(s), model comparison, and per-case details including which tools were called.
 
-This means you can ask the assistant "create an eval suite for my support agent with 10 test cases from our FAQ, then compare Claude 3.5 Sonnet vs. Haiku" — and it builds and runs the suite for you.
+This means you can ask the assistant "create an eval suite for my support agent with 10 test cases from our FAQ, then compare Claude 3.5 Sonnet vs. Haiku" — and it builds and runs the suite for you. Or: "add a tool-usage assertion that search_documents must be called before the answer, and run again" to refine the eval.
 
 ## When to eval
 
@@ -115,9 +133,15 @@ Evals are cheap (mostly deterministic checks + an optional judge call), so runni
 
 ## Cost
 
-Each chat/agent case costs one orchestrator call (to answer the question) plus one judge call (to grade it). RAG cases are free — just retrieval math. If you run 100 chat cases, that is ~200 model calls. The cost shows on the run when done.
+- **Chat/agent cases**: one orchestrator call (to answer) + one judge call (to grade against the reference), unless the case is tool-assertions-only (no reference), in which case there's no judge call.
+- **RAG cases**: free — just retrieval math.
+- **Tool cases**: one tool execution, no model calls.
 
-Comparing 3 models on a 50-case suite = 150 case runs × 3 models = 450 model calls. Background runs so it does not block your workflow.
+If you run 100 chat cases with references, that is ~200 model calls. The cost shows on the run when done.
+
+Comparing 3 models on a 50-case suite = 150 case runs × 3 models = 450 model calls. Background runs so it does not block your workflow. Sandboxed evals (the default) run just as fast — no tool execution overhead matters.
+
+Tool-usage assertions and sandboxing are free — they add no cost to an eval run.
 
 ## What gets stored
 
