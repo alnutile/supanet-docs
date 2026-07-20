@@ -1,0 +1,143 @@
+---
+title: Control plane
+description: How the hosted SupaNet offering works — provisioning, tenant management, and scaling.
+---
+
+The **control plane** is the infrastructure that powers hosted SupaNet (supanet.io). When a customer signs up and pays, the control plane automatically provisions a complete SupaNet workspace for them without any manual work.
+
+## Architecture overview
+
+The control plane is a separate npm workspace in `control-plane/`, just like `workers/`. It runs independently from the main SupaNet app and consists of three pieces:
+
+1. **Engine** — a resumable provisioning pipeline that creates and configures tenant infrastructure
+2. **Control-plane Supabase** — a dedicated project that tracks tenants, provisioning jobs, and subscriptions
+3. **Signup UX** — a small web app and backend for the signup flow and status page
+
+## Per-tenant infrastructure
+
+Each customer gets a complete, isolated SupaNet deployment:
+
+- **Supabase project** — a dedicated PostgreSQL database created in the Sundance Solutions org via the Management API
+- **Railway service** — a per-tenant deployment of the SupaNet frontend and edge functions, built from the stable `release` branch
+- **Custom domain** — `yourcompanyname.supanet.io` via Cloudflare DNS
+- **OpenRouter key** — a per-tenant API key with a spend limit, so runaway automations can't exceed their subscription cost
+
+This isolation means:
+- Total data separation — one tenant's database never touches another's
+- Easy to upgrade — merge a change on `release` and every tenant auto-updates
+- Easy to cancel — pause or delete the Railway service and Supabase project
+- Easy to eject — transfer the tenant's Supabase project to their own account, hand them the repo, and they're running self-hosted
+
+## The `release` branch
+
+Development continues on `main` (trunk-based, auto-deploys the main SupaNet instance). Shipping to customers is done by merging vetted commits into a long-lived `release` branch:
+
+1. A change lands on `main`, gets tested and deployed to the main instance.
+2. When ready to ship, you fast-forward `release` to that commit.
+3. Every tenant Railway service tracks `release`, so merging auto-redeploys them all at once — fleet upgrade with one push.
+4. If something breaks, roll back by force-pushing `release` to the prior commit; all tenants roll back together.
+
+This means **database migrations must stay backward-compatible one release back** (migrations in SupaNet are already additive and never destructive, so this is automatic).
+
+## The provisioning engine
+
+The engine is the core: a pipeline of idempotent, resumable steps. Each step is recorded in a `progress` jsonb checklist on the provisioning job row, so a failed run re-enters at the failed step and never double-applies.
+
+The steps are:
+
+1. **createProject** — Supabase Management API: create a new project in the org
+2. **waitForHealthy** — poll `/auth/v1/health` until the project responds
+3. **applyMigrations** — run all `supabase/migrations/*.sql` against the new project
+4. **deployFunctions** — bundle and deploy all edge functions from the `release` checkout
+5. **setSecrets** — set `OPENROUTER_API_KEY` and other edge-function secrets
+6. **configureAuth** — add allowed email domains and JWT secrets
+7. **mintOpenRouterKey** — OpenRouter Provisioning API: create a per-tenant key with a spend limit
+8. **createRailwayService** — Railway GraphQL API: create a service, set env vars, connect to the `release` branch
+9. **wireDns** — Cloudflare API: create a CNAME and ownership TXT records
+10. **verify** — health-check the new workspace (Supabase + Railway + custom domain)
+
+Each step can fail and be retried from the control-plane admin dashboard without re-running the prior steps.
+
+## Tenant state machine
+
+A tenant moves through states driven by Stripe webhooks and the control plane's `lifecycle-tick` function:
+
+```
+pending_payment → provisioning → active
+                                 ↓
+                            (payment failure)
+                                 ↓
+                            past_due
+                                 ↓ (unpaid for grace period)
+                            paused (Railway/Supabase paused, costs nothing)
+                                 ↓ (30 days later)
+                            deleted (workspace removed, export offered)
+```
+
+A tenant can also be manually canceled (moves to paused immediately at period end).
+
+## Subscription and billing
+
+- **Signup → Stripe Checkout** — customer pays $49/month, never per seat.
+- **Payment confirmed** → provisioning starts (no free tier).
+- **During the month** — `lifecycle-tick` runs daily, checking for canceled or past-due subscriptions.
+- **Cancel** → pauses the workspace at period end (Stripe + Supabase + Railway paused state means near-zero cost).
+- **Overage** — if the per-tenant OpenRouter key usage exceeds the included allowance, overage is metered and billed on the next invoice.
+
+## Running the control plane locally
+
+For development and testing, the engine can be run directly from a laptop:
+
+```bash
+cd control-plane
+npm install
+cp .env.example .env     # fill in credentials for Supabase Management API, Railway, Cloudflare, OpenRouter, Stripe
+npm run tenant-zero -- --slug acme --name "Acme Co" --email you@example.com
+```
+
+Progress persists to `tenant-zero.state.json`, so a failed run can be resumed by re-running the same command.
+
+### Prerequisites
+
+1. A `release` branch on the repo (created once: `git branch release && git push -u origin release`).
+2. A Railway project and environment to hold tenant services (IDs in `.env`), with the GitHub repo connected to your Railway account.
+3. API credentials:
+   - Supabase org PAT (Dashboard → Account → Access Tokens)
+   - Railway API token
+   - Cloudflare API token (scoped to Zone:DNS:Edit on the `supanet.io` zone)
+   - OpenRouter Provisioning API credentials
+   - Stripe test keys
+
+### Field notes from the first production run
+
+The first tenant ("tenant-zero") was provisioned on 2026-07-19. Some gotchas discovered and fixed:
+
+- **Management API is transactional per request** — a failed migration leaves no partial state, but the version record must commit atomically with the migration itself.
+- **Management API throttles** (~60 req/min) — the client backs off and retries internally.
+- **Fresh projects gate `/rest/v1/` to secret keys** — use `/auth/v1/health` for health checks instead.
+- **Railway custom domains require DNS verification** — set both the CNAME and the TXT record for the ownership check.
+- **Let's Encrypt allows ~50 certs/week per domain** — per-tenant certs on `*.supanet.io` cap onboarding at ~50 tenants/week. Use Cloudflare for SaaS or a wildcard cert before scaling.
+
+## Admin dashboard (internal)
+
+The control plane has a small Supabase edge function and React app for admins to:
+
+- View the list of tenants and their state (active, paused, etc.)
+- Trigger a provisioning retry if a step failed
+- Manually pause or delete a tenant
+- View provisioning logs and progress
+
+This runs on the control plane's own Supabase project (not tenant-visible).
+
+## Non-goals (v1)
+
+- Multi-tenant (many companies per Supabase project) — still rejected.
+- Custom domains (`ai.acme.com`) — stay on `*.supanet.io`.
+- SSO/SAML, per-seat pricing, or other enterprise features.
+- A literal OpenRouter proxy service — provisioned keys with limits do the job.
+- Migrating existing self-hosted workspaces into the control plane.
+
+## See also
+
+- [Deploy](/docs/building/deploy) — how to run SupaNet self-hosted
+- [Full task spec](https://github.com/alnutile/supabase-as-a-service/blob/main/docs/tasks/hosted-control-plane.md) — detailed design and build order

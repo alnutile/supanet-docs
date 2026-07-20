@@ -5,6 +5,7 @@
     "index",
     "architecture",
     "deploy",
+    "control-plane",
     "agents",
     "capability-workers",
     "loops",
