@@ -41,9 +41,12 @@ hiding the key.
      conversation and lists who the participants are.
 3. It loads the active **tools** the model is allowed to use.
 4. It runs an **agentic loop**: the model may call tools; the function executes
-   them, feeds the results back, and loops until the model is done or it hits a
-   turn limit.
-5. The reply **streams** back to the browser as server-sent events.
+   them, feeds the results back, and loops until the model is done or it hits the
+   turn limit (up to 16 tool calls per response).
+5. The reply **streams** back to the browser as server-sent events. During idle
+   gaps (while tools run or the model "thinks"), a heartbeat ping is sent every
+   15 seconds to keep the connection alive — preventing intermediate proxies from
+   dropping the stream.
 
 ### Server-side persistence
 

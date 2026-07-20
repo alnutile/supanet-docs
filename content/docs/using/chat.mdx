@@ -153,6 +153,12 @@ server-side as it is written. If your browser refreshes, you navigate away, or
 your connection drops mid-reply, the response still lands in your conversation
 — you won't lose it. Just reload the page and you'll see the full reply.
 
+For long-running responses (like when the assistant is using multiple tools or
+"thinking"), the connection is kept alive with periodic heartbeats, so idle gaps
+won't cause intermediate proxies to drop the connection. If the stream does drop,
+the typing indicator stays visible while the background task completes, then the
+reply appears on your screen via Realtime as soon as it's ready.
+
 ## Stopping a response
 
 While the assistant is generating a response, the send button becomes a **Stop**
