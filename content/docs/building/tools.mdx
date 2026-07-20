@@ -59,6 +59,10 @@ examples include:
 - **`create_agent_job` / `get_agent_job` / `list_agent_jobs` / `cancel_agent_job`** - hand heavy binary
   work (Office documents, media processing) to specialized workers. Create a durable job, poll for results,
   and present the outputs. See [Capability workers](/docs/building/capability-workers) for details.
+- **`list_agents` / `create_agent`** - the assistant can list agents and create new ones programmatically.
+- **`list_tools` / `create_http_tool`** - discover available tools and create custom HTTP tools (admin-only).
+- **`create_webhook`** - the assistant can create webhooks directly.
+- **`list_skills` / `get_skill` / `create_skill` / `update_skill` / `delete_skill`** - manage skills and prompts; create always-on prompts (admin-only) or personal on-demand skills.
 
 Built-ins follow the same rules as any tool: admin activation, per-agent scoping,
 and the webhook gate all still apply.

@@ -40,21 +40,20 @@ Both Claude Code and Claude Desktop can also use **OAuth 2.1** — paste the MCP
 
 ## What it exposes
 
-The server exposes build tools so an outside Claude can populate your workspace:
+The server exposes build and content tools so an outside Claude can populate your workspace. These are the same tools the **internal** chat assistant, scheduler, and webhook agents can access:
 
-- `create_agent`
-- `create_http_tool`
-- `create_skill`
-- `create_webhook`
+- `list_agents` / `create_agent` — list and create agents
+- `list_tools` / `create_http_tool` — discover tools and create custom HTTP tools (admin-only)
+- `create_webhook` — create webhooks
+- `list_skills` / `get_skill` / `create_skill` / `update_skill` / `delete_skill` — manage skills and prompts (create always-on prompts as admin only)
 - `create_artifact` / `list_artifacts` / `get_artifact` / `list_collections` / `create_collection` / `add_to_collection` / `add_note`
-  (content-authoring tools - same capabilities the **internal** chat assistant and agents have)
+  (content-authoring tools)
 - `create_file` / `list_files` / `get_file` / `delete_file` / `add_file_to_collection`
   (file tools for persisting generated output - images, PDFs, text files)
 - `list_tables` / `create_table` / `add_table_row` / `update_table_row` (table tools for managing
   data tables programmatically)
 - `create_agent_job` / `get_agent_job` / `list_agent_jobs` / `cancel_agent_job`
   (capability worker tools for queuing and monitoring Office/media jobs)
-- the matching `list_*` tools
 
 ### External MCP tools
 

@@ -47,7 +47,7 @@ Each connection uses a **per-user token** — your workspace is protected, and e
 
 ## What you can do
 
-Once connected, the `intranet` MCP server exposes tools to build and manage your workspace:
+Once connected, the `intranet` MCP server exposes tools to build and manage your workspace. These are the **same tools** that the internal chat assistant can use:
 
 - **Create & edit artifacts** — save markdown, code, HTML, or plain text. Returns a shareable link.
 - **Push files** — persist images, PDFs, and other output you generate. Get back a signed URL.
@@ -55,9 +55,9 @@ Once connected, the `intranet` MCP server exposes tools to build and manage your
 - **Save links** — paste a URL and metadata (title, description, preview) are fetched automatically.
 - **Add notes** — push transcripts, meeting notes, or research into the knowledge base.
 - **Query & edit tables** — work with real Postgres data tables from your local environment.
-- **Build automation** — create agents, tools, webhooks, and scheduled runs.
+- **Build automation** — create agents, tools, webhooks, skills, and scheduled runs. Admins can create always-on prompts and custom HTTP tools.
 
-The workspace re-enforces access the same way it does for in-app users: you can only work with content you own or that's shared with the team.
+The workspace re-enforces access the same way it does for in-app users: you can only work with content you own or that's shared with the team. Admin-only actions (like creating always-on prompts or HTTP tools) require admin privileges in both the external Claude and the internal assistant.
 
 ## A quick example
 
