@@ -19,6 +19,14 @@ and the webhook `allow_tools` gate. On top of that it adds:
 - a **rate limit** (20 sends per hour), and
 - an **`email.sent` activity-log entry** for every send.
 
+### Recipient allowlist
+
+The allowlist restricts which email addresses agents and webhooks can send to.
+When empty, `send_email` can reach any address — a data exfiltration risk when
+combined with untrusted input (like a user-submitted email address in a form).
+The Settings → Email page shows a security warning if an email provider is
+configured but the allowlist is blank, reminding admins to set allowed recipients.
+
 ## Receiving
 
 Receiving is **inbound-parse, not IMAP**. The provider POSTs each incoming
