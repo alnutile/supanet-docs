@@ -78,8 +78,9 @@ Never hardcode a model id. Features bind to a **profile key**, not a specific
 model:
 
 - `orchestrator` - the main brain for chat, agents, webhooks, and scheduled runs.
+  Default: `openai/gpt-5.6-luna`.
 - `utility` - cheap and fast, used for guardrail checks and other lightweight
-  calls.
+  calls. Default: `anthropic/claude-haiku-4.5`.
 
 Admins re-point a key to a different model in **Settings → Models**. The database
 row is the source of truth; an environment variable is only a fallback.
