@@ -95,6 +95,9 @@ Merging the PR to `main` triggers the Action, which applies it to the live datab
 > **One rule:** every migration filename must have a **unique** numeric prefix. Two
 > files sharing a number (e.g. two `0032_*.sql`) collide — `db push` derives the
 > version from the prefix and will refuse the push. Always use the next free number.
+>
+> A test (`src/lib/migrations.test.ts`) runs in CI to catch duplicate or gapped
+> prefixes before they reach `main`, preventing silent migration failures.
 
 ### Fresh project notes
 
