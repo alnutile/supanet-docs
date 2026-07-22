@@ -8,7 +8,7 @@ You can connect an external Claude (Claude Desktop, claude.ai, or Claude Code on
 ## Why you'd do this
 
 - **Create and share from outside the app** — draft an artifact in Claude Desktop and send it to the workspace.
-- **Automate intranet tasks** — a script or Claude Code session can push documents, notes, and files into SupaNet with a single command.
+- **Automate SupaNet tasks** — a script or Claude Code session can push documents, notes, and files into SupaNet with a single command.
 - **Integrate your own tools** — use Claude with Playwright, execute code, fetch external data, then file the results into collections.
 
 ## Getting connected
@@ -37,17 +37,17 @@ Best for **Claude Code** (the CLI), or if you prefer not to use OAuth.
 
    - **Claude Code**: Copy the command and run it in your terminal (anywhere — `--scope user` makes it available in every project).
      ```bash
-     claude mcp add --scope user --transport http intranet <url> --header "Authorization: Bearer <token>"
+     claude mcp add --scope user --transport http supanet <url> --header "Authorization: Bearer <token>"
      ```
-     Then start `claude` and run `/mcp` — you should see **intranet** connected.
+     Then start `claude` and run `/mcp` — you should see **supanet** connected.
 
-   - **Claude Desktop**: Open **Settings → Developer → Edit Config** and add the provided JSON block to the `mcpServers` section in your `claude_desktop_config.json`. The token is stored securely in an environment variable. Restart Claude Desktop and check the MCP icon (🔌) — you should see **intranet** connected.
+   - **Claude Desktop**: Open **Settings → Developer → Edit Config** and add the provided JSON block to the `mcpServers` section in your `claude_desktop_config.json`. The token is stored securely in an environment variable. Restart Claude Desktop and check the MCP icon (🔌) — you should see **supanet** connected.
 
 Each connection uses a **per-user token** — your workspace is protected, and everything you push runs as you. Treat tokens like passwords; revoke them in Settings if they leak.
 
 ## What you can do
 
-Once connected, the `intranet` MCP server exposes tools to build and manage your workspace. These are the **same tools** that the internal chat assistant can use:
+Once connected, the `supanet` MCP server exposes tools to build and manage your workspace. These are the **same tools** that the internal chat assistant can use:
 
 - **Create & edit artifacts** — save markdown, code, HTML, or plain text. Returns a shareable link.
 - **Push files** — persist images, PDFs, and other output you generate. Get back a signed URL.
@@ -77,6 +77,6 @@ Or pull data from a table, manipulate it outside, and push the results back:
 
 ## Where to learn the details
 
-Settings → Connect Claude also gives you access to a comprehensive **intranet-workspace skill**. If you're using Claude Code or Claude Desktop, grab that skill — it's a full reference of all the tools, with patterns for filing into collections, searching the knowledge base, and more.
+Settings → Connect Claude also gives you access to a comprehensive **SupaNet workspace skill**. If you're using Claude Code or Claude Desktop, grab that skill — it's a full reference of all the tools, with patterns for filing into collections, searching the knowledge base, and more.
 
 For the MCP server architecture, see the [Building on SupaNet](/docs/building/mcp-server) docs.
