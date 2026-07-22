@@ -27,6 +27,11 @@ combined with untrusted input (like a user-submitted email address in a form).
 The Settings → Email page shows a security warning if an email provider is
 configured but the allowlist is blank, reminding admins to set allowed recipients.
 
+An `@domain` rule in the allowlist matches addresses ending with that exact string.
+For example, `@example.com` matches `user@example.com` but **not** `user@sub.example.com`
+(which ends with `.example.com`, not `@example.com`). To allow subdomains, add each
+subdomain as its own rule — the safe default for a send-to allowlist.
+
 ## Receiving
 
 Receiving is **inbound-parse, not IMAP**. The provider POSTs each incoming
