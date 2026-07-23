@@ -26,11 +26,20 @@ When you upload a PDF, SupaNet quietly does the following in the background:
 
 1. Pulls the text out of the PDF.
 2. Breaks it into small chunks.
-3. Builds a searchable index of those chunks.
+3. Builds a searchable index of those chunks using **hybrid retrieval** — both semantic search (understanding meaning) and keyword search (matching exact terms).
 
 After that, the assistant can search across your PDFs and pull in the relevant
 passages when you ask a question - and it tells you **which document** each
 answer came from, so you can trust and verify it.
+
+### How hybrid search works
+
+The knowledge base runs two parallel searches on every query:
+
+- **Semantic search** finds passages that are conceptually related to your question, even if the exact words don't match. For example, searching for "refund policy" will find a passage that says "money-back guarantee".
+- **Keyword search** finds exact matches for terms, IDs, and names that semantic search might miss. For example, searching for "SKU-12345" will find that exact product code.
+
+These two results are then combined using a ranking algorithm that surfaces chunks appearing in both searches at the top. This hybrid approach is more accurate than either method alone — it catches paraphrases semantic search misses and exact terms keyword search wouldn't find.
 
 You do not have to do anything to trigger this. Upload the PDF and, a short time
 later, it is searchable.
