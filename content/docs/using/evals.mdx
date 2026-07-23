@@ -29,7 +29,7 @@ Like chat, but the cases run through a specific agent's prompt and tools instead
 ### RAG suites
 Test whether a document search + retrieval pipeline returns the right passages. Each case is a query; assertions deterministically check whether the top-K retrieved chunks contain the expected documents or phrases. No model, no judging — pure retrieval metrics.
 
-RAG suites automatically run an **A/B test** of hybrid retrieval (the live system) against vector-only search, so you can see which performs better on your actual test cases. The results show both scores side-by-side — for example, "hybrid 8/10 vs vector 5/10" — making it easy to verify that the hybrid approach is a real improvement for your domain.
+RAG suites automatically run an **A/B test** of hybrid retrieval (semantic + keyword search fused together) against vector-only search. The results show both scores side-by-side — for example, "hybrid 8/10 vs vector 5/10" — making it easy to verify that the hybrid approach is a real improvement for your domain on your actual test cases.
 
 ### Tool suites
 Test a tool in isolation. Each case is JSON like `{"tool":"name","input":{…}}`; the runner calls the tool directly (no model) and assertions check the output text. Useful for validating that a custom HTTP tool or data-transformation builtin works correctly on known inputs.
