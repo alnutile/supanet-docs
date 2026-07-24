@@ -46,11 +46,57 @@ The same agent can run in three contexts:
 - **From a webhook.** A webhook can target an agent, so an incoming payload is
   run through the agent's prompt and tools instead of a bare prompt. See
   [Webhooks](/docs/building/webhooks).
-- **On a schedule.** A `schedules` row pairs an agent with an interval and an
+- **On a schedule.** A `schedules` row pairs an agent with a cadence and an
   optional input. A `scheduler` edge function, ticked once a minute by `pg_cron`,
-  runs due schedules. Each run uses the agent's own instructions; the optional input
-  can add extra direction for that specific run. You manage schedules inside the agent
-  editor.
+  runs due schedules. Cadence can be a **preset interval** (every N minutes/hours/days)
+  or a **standard 5-field cron expression** for exact times the presets can't express
+  (e.g., the 15th of every month, the last day of the month, weekdays at 9am, evaluated
+  in a timezone of your choice). Each run uses the agent's own instructions; the optional
+  input can add extra direction for that specific run. You manage schedules inside the
+  agent editor.
+
+## Scheduling with cron expressions
+
+When the preset intervals (every 5 minutes, hourly, daily, etc.) don't match your
+needs, you can use a standard 5-field **cron expression** to schedule an agent at
+exact times.
+
+A cron expression has five space-separated fields:
+
+```
+┌───────── minute (0–59)
+│ ┌─────── hour (0–23)
+│ │ ┌───── day of month (1–31, or L for last day)
+│ │ │ ┌─── month (1–12)
+│ │ │ │ ┌─ day of week (0–6, Sun=0)
+│ │ │ │ │
+* * * * *
+```
+
+Some common examples:
+
+- `0 9 * * *` — Every day at 9:00am
+- `0 9 * * 1-5` — Weekdays (Mon–Fri) at 9:00am
+- `0 9 15 * *` — The 15th of every month at 9:00am
+- `0 17 L * *` — The last day of every month at 5:00pm
+- `*/30 * * * *` — Every 30 minutes
+- `0 */6 * * *` — Every 6 hours
+
+Features:
+
+- `*` means "every" in that field.
+- Ranges work: `1-5` for days 1 through 5.
+- Lists work: `1,15,L` for the 1st, 15th, and last day.
+- Steps work: `*/15` for every 15 units, `0 */2` for every 2 hours.
+- `L` in the day field means the last day of the month (works even in February).
+
+When you specify a cron expression, you must also choose a timezone (IANA format,
+e.g., `America/New_York` or `Europe/London`). The schedule evaluates the expression
+in that timezone, so `0 9 15 * *` in `America/New_York` fires at 9am Eastern time,
+not UTC.
+
+The editor previews the next few fire times as you type, so you can verify the
+expression does what you expect.
 
 ## Collections bound to an agent
 
