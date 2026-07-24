@@ -1,0 +1,97 @@
+---
+title: Meeting Notes
+description: Record audio and get a live transcript that you can save as an artifact.
+---
+
+**Meeting Notes** is a live audio recorder that transcribes what you say in real time. Start recording, and SupaNet uses OpenAI Whisper to convert speech to text as you speak. When you're done, save the transcript as a markdown artifact for future reference or sharing.
+
+## Why meeting notes are useful
+
+Meeting Notes lets you capture conversations without manually typing:
+
+- **Live transcription** — record audio and see words appear in real time; no silent pauses, no retype.
+- **Timestamps** — each segment is timestamped so you can jump back to a specific part of the meeting.
+- **Save as an artifact** — once you've recorded and reviewed, save the transcript as a markdown artifact you can share, edit, or include in collections.
+- **No manual prep** — just hit record and listen; transcription happens automatically.
+
+## Where to find Meeting Notes
+
+On the sidebar under **Assets**, select **Meeting Notes**. You'll see a recording panel, a text input for the meeting title, and a live transcript view.
+
+## Starting a recording
+
+1. Enter a **meeting title** (e.g., "Weekly Standup" or "Client Call") — this is required before recording can start.
+2. Click **Start Recording**. SupaNet requests permission to access your microphone.
+3. Once granted, the microphone icon pulses red and the status shows "Recording...".
+
+The recording runs in the browser and never leaves your device until you save. Transcription happens every 10 seconds, so you see segments appear as they're processed.
+
+## Viewing the transcript
+
+As you record, segments appear in the **Transcript** panel below the controls. Each segment shows:
+
+- **Timestamp** — the time offset from the start of the recording (MM:SS format).
+- **Text** — what was transcribed from that moment.
+
+The transcript auto-scrolls as new segments arrive, and you can scroll up to review earlier parts without interrupting the recording.
+
+## Stopping and reviewing
+
+Click **Stop Recording** to end the audio capture. SupaNet:
+
+1. Stops the microphone stream.
+2. Sends any remaining audio chunks for transcription.
+3. Updates the status to "Recording stopped. Review and save."
+
+Review the transcript in the panel. If you see errors or want to adjust the text (manual edits aren't supported yet — this is planned), you can clear it all and start over, or save it as-is.
+
+## Saving as an artifact
+
+Once you've stopped recording and reviewed the transcript:
+
+1. Click **Save as Artifact**. SupaNet formats the transcript as markdown, adding:
+   - The meeting title as the top heading.
+   - The date recorded.
+   - Timestamps for each segment.
+   - The full transcript text.
+
+2. The artifact is saved as a **private** markdown file (only you can see it initially).
+3. SupaNet redirects you to the artifact editor, where you can:
+   - Edit the transcript further.
+   - Change the visibility to share it with your team.
+   - File it into a collection.
+   - Include it in a chat.
+
+The artifact also stores metadata recording the duration and that it came from meeting notes, so you can filter or organize them later.
+
+## Clearing a transcript
+
+If you want to discard the current recording without saving, click **Clear**. SupaNet prompts for confirmation, then resets the transcript, title, and recording state so you can start fresh.
+
+This action cannot be undone — any unsaved transcript is lost.
+
+## How transcription works
+
+Transcription uses **OpenAI Whisper**, the same model that powers voice transcription across many apps. It supports:
+
+- **Multiple languages** — Whisper detects the language automatically, but you can optionally specify one if transcription is going wrong.
+- **Noisy environments** — Whisper is robust to background noise, but clarity improves the accuracy.
+- **Various audio formats** — the browser captures webm/opus format, and Whisper accepts it.
+
+Every 10 seconds of recording produces a transcription request, so even a long meeting is split into digestible chunks and processed efficiently.
+
+## Microphone permissions
+
+The first time you use Meeting Notes, your browser asks permission to access your microphone. Grant it to proceed. You can revoke permission in your browser settings at any time; the next recording will ask again.
+
+**Privacy note:** Audio is sent to OpenAI's servers for transcription, but is not stored or used to train models (per OpenAI's policy). The transcript text is stored only in your SupaNet workspace as an artifact.
+
+## Using the transcript in chat
+
+Once saved as an artifact, the transcript is a regular markdown file. You can:
+
+- **Share it** — change visibility to workspace or public, or share a link.
+- **File it into a collection** — organize with other meeting notes or project files.
+- **Chat with it** — include the artifact's collection in a chat so the assistant can read and summarize the meeting, extract action items, or answer questions about what was discussed.
+
+The assistant can also edit the transcript afterward to clean up errors, add headings, or format it further.
