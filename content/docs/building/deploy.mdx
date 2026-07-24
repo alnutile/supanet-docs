@@ -97,7 +97,28 @@ Merging the PR to `main` triggers the Action, which applies it to the live datab
 > version from the prefix and will refuse the push. Always use the next free number.
 >
 > A test (`src/lib/migrations.test.ts`) runs in CI to catch duplicate or gapped
-> prefixes before they reach `main`, preventing silent migration failures.
+> prefixes before they reach `main`, preventing silent migration failures. However,
+> collisions can still slip through a rebase: if your `0086_my_change.sql` lands while
+> someone else's `0086_other_change.sql` is already on `main`, both will be in CI's
+> single run and the test won't catch it. **Re-check the next free number right
+> before pushing**, not just when you create the file.
+
+**Changing a function signature:** Postgres rejects `create or replace function`
+> when the `returns` or OUT signature changes (error `SQLSTATE 42P13`), which aborts
+> the whole `db push`. When a migration alters an existing function's signature
+> (e.g. adding a column to a `returns table (...)`), prepend a DROP:
+>
+> ```sql
+> drop function if exists public.my_function(arg1_type, arg2_type);
+> create or replace function public.my_function(arg1_type, arg2_type)
+> returns table (...) as $$
+> ...
+> ```
+>
+> A migration that hits this error **never records as applied**, leaving its objects
+> missing in production (e.g. a later `promote_to_admin` in the same file is never
+> created). Because it failed to apply, editing the file in place to add the DROP is
+> the correct, safe fix — reapply and it will succeed.
 
 ### Fresh project notes
 
