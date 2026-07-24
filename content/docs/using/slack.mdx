@@ -48,6 +48,8 @@ A channel binding can have an optional **agent**. When set, the bot uses the age
 
 By default, tools are off. This means an untrusted room (or one where you just want answers, no actions) runs the bot read-only.
 
+The bot also learns the workspace timezone (set in Settings → Timezone), so when it answers questions like "is this today?" or "when should we ship?", it knows your team's local time, not UTC.
+
 ## Ambient mode
 
 By default the bot only replies when @mentioned. Turn on **ambient mode** for a channel and the bot will read every message and decide whether to chime in on its own.

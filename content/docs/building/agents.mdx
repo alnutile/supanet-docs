@@ -95,6 +95,11 @@ e.g., `America/New_York` or `Europe/London`). The schedule evaluates the express
 in that timezone, so `0 9 15 * *` in `America/New_York` fires at 9am Eastern time,
 not UTC.
 
+New schedules default to the workspace timezone (set in Settings → Timezone); existing
+schedules keep theirs. The agent also learns the current date and time in whatever timezone
+the schedule uses, so when it reasons about "today" or "now" during the run, it uses the
+correct local time.
+
 The editor previews the next few fire times as you type, so you can verify the
 expression does what you expect.
 

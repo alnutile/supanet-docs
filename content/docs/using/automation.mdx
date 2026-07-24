@@ -30,6 +30,10 @@ Each listener specifies:
   - **Add to collection** — file the thing into a collection.
   - **Log** — record the match (useful for testing).
 
+When a listener runs an agent, it learns the workspace timezone (set in Settings → Timezone),
+so if the agent needs to reason about time — "log this if it arrived today" — it uses your
+local clock, not UTC.
+
 The **Events** page (`/events`) shows you the live stream of everything happening
 in your workspace — so you can see which events are firing and test your listeners
 before turning them on.
@@ -56,6 +60,10 @@ This is more direct than listeners — the webhook has its own configuration and
 can run immediately, whereas listeners react to internal events. Use webhooks for
 external systems; use listeners for things happening inside SupaNet.
 
+When a webhook runs an agent, the agent knows the workspace timezone (set in Settings → Timezone),
+so it answers questions like "is this today?" or "when is the next Tuesday?" in your local time,
+not UTC.
+
 ## Running on a schedule
 
 SupaNet can run an agent on a repeating schedule - every morning, every hour,
@@ -63,6 +71,8 @@ whatever you need. The agent runs using its own instructions each time; you can
 optionally add extra direction for a specific run if needed. A classic example is
 "every morning, gather X and email me a summary." You set it up once and it just
 keeps happening.
+
+**Timezones:** By default, scheduled agents (and all automations) reason about the current date and time in UTC. If your team is elsewhere, set the workspace timezone in **Settings → Timezone** — then every agent, listener, webhook, and Slack reply will know the correct "today" and "now" in your local time. New schedules will default to this timezone; existing ones keep theirs unless you change them manually.
 
 ## The activity feed
 
