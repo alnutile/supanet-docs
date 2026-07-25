@@ -50,7 +50,20 @@ See [Inbox](/docs/using/inbox) for how messages flow in.
 
 Other systems can send information into SupaNet through a **webhook** - a private
 address that, say, your form tool or your CRM posts to when something happens.
-SupaNet can then run a prompt or an agent against whatever came in.
+SupaNet can then save the data to a table, run a prompt, or run an agent against it.
+
+**Four modes (in order of precedence):**
+
+1. **Save to table** — the raw payload drops straight into a column of your table
+   (deterministic, no AI, never skipped). If that table is an event source, a listener
+   can then react to process it. Perfect for "store the raw data, then have an agent
+   structure it afterward."
+2. **Call a function** — the payload is validated and sent straight to a custom tool
+   (deterministic, schema validation is the gate).
+3. **Run an agent** — SupaNet runs an agent against the payload with its full
+   toolset and access rules.
+4. **Run a prompt** — SupaNet runs a plain prompt against the payload (AI-driven,
+   subject to guardrails).
 
 In plain terms: "when a new lead arrives, summarise it and file it" or "when this
 form is submitted, check it and flag anything odd." The event arrives, SupaNet

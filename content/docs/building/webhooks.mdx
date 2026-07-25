@@ -1,25 +1,55 @@
 ---
 title: Webhooks
-description: Three modes for letting outside systems trigger work in SupaNet.
+description: Four modes for letting outside systems trigger work in SupaNet — save to table, call a function, run an agent, or run a prompt.
 ---
 
 A **webhook** lets an external system POST data into SupaNet and have something
 happen. Each webhook is a row with an opaque token; callers hit the public
 `webhook` edge function at `/functions/v1/webhook/<token>`.
 
-## Three modes, in precedence order
+## Four modes, in precedence order
 
 When a payload arrives, the webhook function decides what to do based on how the
-webhook is configured. The precedence is:
+webhook is configured. Exactly one target is chosen (they are mutually exclusive).
+The precedence is:
 
-1. **Direct tool (`tool_id`)** - deterministic, no model. The payload is
+1. **Save to table (`table_id` + `target_column`)** - deterministic, no model. The
+   raw JSON payload drops straight into one column of a user table — it never skips,
+   never gets lost, and the AI has no say. If the target table is an event source
+   (has `emit_events` enabled), the row insert triggers a `table.*` event that any
+   listener can react to. This is the "append-only ingestion" pattern: external data
+   flows in, a database fact is recorded, and then intelligent processing happens
+   downstream via listeners.
+2. **Direct tool (`tool_id`)** - deterministic, no model. The payload is
    validated against the tool's input schema (required fields and top-level
    types), then POSTed straight to the tool's URL. A bad payload returns a 400
    listing the offending fields. This is the "n8n function node" pattern: schema
    validation *is* the gate, because nothing reaches an LLM.
-2. **Agent (`agent_id`)** - the payload runs through an [agent](/docs/building/agents)
+3. **Agent (`agent_id`)** - the payload runs through an [agent](/docs/building/agents)
    (its prompt and tools) via the agent loop.
-3. **Prompt** - the payload runs against a plain prompt.
+4. **Prompt** - the payload runs against a plain prompt.
+
+## Per-table event sourcing
+
+When you enable "Trigger an event when a row is added" on a table (via Settings),
+the table becomes an event source. Every new row insert fires a `table.<slug>_<id>`
+event carrying the full row as data. The event is automatically scoped to the table's
+visibility (private or workspace).
+
+Each table gets a stable, frozen event type — once minted, toggling events on/off
+preserves it, so listeners wired to the event name never break from a pause/resume.
+
+**The webhook → table → listener flow:**
+
+1. Webhook saves raw payload to table (deterministic, no guardrail).
+2. Row insert fires a `table.*` event.
+3. A listener matches the event and runs an agent (with the event data as context)
+   to structure, classify, or act on the raw data.
+4. The agent files the processed result into collections for your team.
+
+This decouples ingest from processing: raw data always lands, processing can be
+retried/modified/scoped without changing the webhook, and the event log gives you
+a full audit trail.
 
 ## Read-only by default
 

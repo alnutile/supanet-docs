@@ -146,6 +146,37 @@ and to-dos. When you use a collection in Chat (via the 📚 picker), the assista
 access to the artifacts, files, to-dos, and tables in that collection. This is useful
 for "ask the assistant to review this table alongside these docs."
 
+## Tables as event sources
+
+You can turn any table into an **event source**. When you enable it, the table emits
+an event every time a new row is added. This opens up two powerful workflows:
+
+### Raw ingest + AI refinement
+
+Use a webhook to dump raw data into a table (see [Webhooks](/docs/using/automation)
+for the "Save to table" mode), then set up a listener to react to each new row —
+an agent can structure it, judge it, extract key facts, and file it into collections
+for your team to review.
+
+For example:
+- *"A form submission arrives → webhook saves it raw to the Leads table → listener
+  runs the Triage agent to categorize and flag urgent ones."*
+- *"Slack message → saved to the Raw Messages table → listener extracts action items
+  and files them as to-dos."*
+
+### How to enable it
+
+Open the table's **Settings** (gear icon) and check **"Trigger an event when a row is added"**.
+SupaNet creates a stable event name and you'll see a **Send test event** button so you
+can preview the event shape before wiring up listeners.
+
+Once enabled, set up a listener on the **Automation → Listeners** page:
+- **Event:** the event name shown in Settings
+- **Action:** run an agent to process the row, or run a tool, or add it to a collection
+
+The raw event includes the whole new row as JSON, so the listener has all the data
+it needs to work with.
+
 ## Using tables in Chat
 
 The assistant has tools to work with your tables:
