@@ -65,6 +65,15 @@ whenever a file under `supabase/migrations/` lands on `main`. The CLI only appli
 what's pending (the remote tracks applied versions), so merging a PR that adds a new
 migration file applies exactly that file — no manual step, safe to re-run.
 
+**Automation cron scheduling:** After pushing migrations, the workflow automatically
+schedules (or reschedules) the background dispatcher and scheduler cron jobs. These
+jobs tick once per minute and power listeners, scheduled agents, and webhooks. The
+workflow fetches the service role key from the Supabase Management API and calls the
+`setup_automation_cron()` RPC with your project's URL. This is idempotent and safe to
+re-run on every deploy. If you set up SupaNet by hand without using the workflow, you
+can schedule cron manually from the app: on the **Listeners** page, if you see an
+"Automations aren't running" banner, click **Schedule it now** — it calls the same RPC.
+
 To set this up, add two repository secrets (**Settings → Secrets and variables →
 Actions**):
 

@@ -42,6 +42,18 @@ The **Events** page (`/events`) shows you the live stream of everything happenin
 in your workspace — so you can see which events are firing and test your listeners
 before turning them on.
 
+### Automation health
+
+For listeners, scheduled agents, and webhooks to actually run, SupaNet needs a
+background dispatcher and scheduler — cron jobs that tick once per minute. These are
+normally set up automatically when you deploy.
+
+If you see a banner on the **Listeners** page saying "Automations aren't running," it
+means the background dispatcher isn't scheduled. Click the **Schedule it now** button to
+fix it. (Admins can also do this manually via the Listeners page health check.) Cron
+scheduling happens automatically on every deploy, so you should never need to do this
+unless you set up SupaNet by hand without running the deployment workflow.
+
 ## Reacting to incoming messages
 
 The **Inbox** is where all your messages live — email, Slack, WhatsApp, or anything you push in. When a message arrives, it emits an event, so you can set up a listener to react to it.
