@@ -12,6 +12,7 @@ Meeting Notes lets you capture conversations without manually typing:
 - **Live transcription** — record audio and see words appear in real time; no silent pauses, no retype.
 - **Timestamps** — each segment is timestamped so you can jump back to a specific part of the meeting.
 - **Live chat panel** — ask the assistant questions about the meeting as it unfolds, or run a saved skill to summarize, extract action items, or anything else you need.
+- **Capture both sides of a call** — optionally record the tab/app audio (Zoom, Meet, Slack huddle) alongside your microphone, so you capture what you said and what others said.
 - **Ambient ideas** — optionally enable idea surfacing to get periodic suggestions of insights, questions, and action items while recording.
 - **Transcript persistence** — if you reload during a recording, your progress is automatically restored.
 - **Save as an artifact** — once you've recorded and reviewed, save the transcript as a markdown artifact you can share, edit, or include in collections.
@@ -28,10 +29,23 @@ Meeting Notes requires your workspace admin to configure the **OpenAI API key**.
 ## Starting a recording
 
 1. Enter a **meeting title** (e.g., "Weekly Standup" or "Client Call") — this is required before recording can start.
-2. Click **Start Recording**. SupaNet requests permission to access your microphone.
-3. Once granted, the microphone icon pulses red and the status shows "Recording...".
+2. Optionally check **"Also capture tab/app audio (Zoom, Meet, Slack huddle)"** if you're on a video or audio call and want to record both sides of the conversation.
+3. Click **Start Recording**. SupaNet requests permission to access your microphone, and if you enabled tab audio, you'll be asked to choose which tab or window to share (choose the one running Zoom, Meet, Slack, or the app you're calling from).
+4. Once granted, the microphone icon pulses red and the status shows "Recording..." or "Recording (mic + shared audio)…".
 
 The recording runs in the browser and never leaves your device until you save. Transcription happens every 15 seconds, so you see segments appear as they're processed.
+
+### Recording both sides of a call
+
+When you check **"Also capture tab/app audio"**:
+
+- **You'll pick the tab or window** — when you click Start Recording, a system dialog appears asking which window or tab to share. Select the one running your meeting (Zoom, Meet, Slack, etc.).
+- **Always tick "Share tab audio"** — the dialog offers options like "Share video" and "Share tab audio". Make sure "Share tab audio" is checked so SupaNet can hear what's playing.
+- **Graceful fallback** — if no audio is shared from the tab, SupaNet automatically falls back to mic-only and lets you know.
+- **Both streams mixed together** — your microphone and the shared audio are mixed and transcribed as one stream, so the transcript contains both what you said and what others said.
+- **Browser support** — this feature works best in Chrome. Safari support is limited.
+
+If you don't enable tab audio capture, SupaNet records your microphone only (the original behavior).
 
 ### Transcript persistence
 
