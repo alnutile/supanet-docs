@@ -12,6 +12,8 @@ Meeting Notes lets you capture conversations without manually typing:
 - **Live transcription** — record audio and see words appear in real time; no silent pauses, no retype.
 - **Timestamps** — each segment is timestamped so you can jump back to a specific part of the meeting.
 - **Live chat panel** — ask the assistant questions about the meeting as it unfolds, or run a saved skill to summarize, extract action items, or anything else you need.
+- **Ambient ideas** — optionally enable idea surfacing to get periodic suggestions of insights, questions, and action items while recording.
+- **Transcript persistence** — if you reload during a recording, your progress is automatically restored.
 - **Save as an artifact** — once you've recorded and reviewed, save the transcript as a markdown artifact you can share, edit, or include in collections.
 - **No manual prep** — just hit record and listen; transcription happens automatically.
 
@@ -31,6 +33,10 @@ Meeting Notes requires your workspace admin to configure the **OpenAI API key**.
 
 The recording runs in the browser and never leaves your device until you save. Transcription happens every 15 seconds, so you see segments appear as they're processed.
 
+### Transcript persistence
+
+If you reload the page or navigate away during a recording, SupaNet automatically restores your in-progress meeting when you return — including the transcript captured so far and your meeting title and context prompt. The chat thread is also saved, so you can resume asking questions. Your progress is never lost.
+
 ## Viewing the transcript
 
 As you record, segments appear in the **Transcript** panel below the controls. Each segment shows:
@@ -49,6 +55,17 @@ Click the **Chat** button to open a live chat panel beside the transcript. The a
 - "Summarise the last few minutes"
 
 The chat is saved as a real conversation, so it syncs across your devices and shows up in your chat list.
+
+## Ambient idea monitor
+
+While recording, you can enable **"Suggest ideas while recording"** — a checkbox in the controls. Once turned on, SupaNet periodically checks the transcript and surfaces brief ideas, open questions, or action items that participants might miss:
+
+- **What it does:** every minute, the assistant reads the new parts of the transcript and suggests one useful insight in a single sentence. If nothing stands out, nothing appears.
+- **Passive observation only:** the monitor runs tool-free, so it only observes and never takes action.
+- **Opt-in:** turn the checkbox on to start receiving ideas, turn it off to silence them.
+- **Live feed:** ideas appear in a purple box below the controls as they arrive, building a list of insights you can review or discuss during the meeting.
+
+This is useful for spotting discussion gaps or reminders that might otherwise get lost in a long meeting.
 
 ## Using a context prompt
 
