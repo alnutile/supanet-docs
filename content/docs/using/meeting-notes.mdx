@@ -43,6 +43,7 @@ When you check **"Also capture tab/app audio"**:
 - **Always tick "Share tab audio"** — the dialog offers options like "Share video" and "Share tab audio". Make sure "Share tab audio" is checked so SupaNet can hear what's playing.
 - **Graceful fallback** — if no audio is shared from the tab, SupaNet automatically falls back to mic-only and lets you know.
 - **Both streams mixed together** — your microphone and the shared audio are mixed and transcribed as one stream, so the transcript contains both what you said and what others said.
+- **Smart mic handling** — when mixing mic and tab audio, SupaNet disables echo cancellation and noise suppression (which would otherwise duck your voice when the tab audio is loud) and boosts your microphone slightly so your voice stays clear and present while videos, music, or presentations play.
 - **Browser support** — this feature works best in Chrome. Safari support is limited.
 
 If you don't enable tab audio capture, SupaNet records your microphone only (the original behavior).
@@ -58,7 +59,7 @@ As you record, segments appear in the **Transcript** panel below the controls. E
 - **Timestamp** — the time offset from the start of the recording (MM:SS format).
 - **Text** — what was transcribed from that moment.
 
-The transcript auto-scrolls as new segments arrive, and you can scroll up to review earlier parts without interrupting the recording.
+The transcript intelligently auto-scrolls as new segments arrive: when you're reading along near the bottom, it keeps you at the newest segment. If you scroll up to review earlier parts, the scroll position stays where you put it so you won't be interrupted. Once you scroll back toward the bottom, auto-scroll resumes.
 
 ## Asking questions during the meeting
 
