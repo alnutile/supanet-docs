@@ -11,6 +11,7 @@ Meeting Notes lets you capture conversations without manually typing:
 
 - **Live transcription** — record audio and see words appear in real time; no silent pauses, no retype.
 - **Timestamps** — each segment is timestamped so you can jump back to a specific part of the meeting.
+- **Live chat panel** — ask the assistant questions about the meeting as it unfolds, or run a saved skill to summarize, extract action items, or anything else you need.
 - **Save as an artifact** — once you've recorded and reviewed, save the transcript as a markdown artifact you can share, edit, or include in collections.
 - **No manual prep** — just hit record and listen; transcription happens automatically.
 
@@ -39,13 +40,36 @@ As you record, segments appear in the **Transcript** panel below the controls. E
 
 The transcript auto-scrolls as new segments arrive, and you can scroll up to review earlier parts without interrupting the recording.
 
+## Asking questions during the meeting
+
+Click the **Chat** button to open a live chat panel beside the transcript. The assistant can see the current transcript and answer questions as the meeting unfolds:
+
+- "What have we decided so far?"
+- "List the action items"
+- "Summarise the last few minutes"
+
+The chat is saved as a real conversation, so it syncs across your devices and shows up in your chat list.
+
+## Using a context prompt
+
+Before you start recording, you can optionally fill in **"What should I do with this meeting?"** — a set of instructions for what the assistant should do with the transcript when recording stops. For example:
+
+- "Summarise the decisions and action items"
+- "Create a to-do for each action item mentioned"
+- "Extract the key technical decisions"
+
+When you click **Stop Recording**, SupaNet automatically sends this prompt to the assistant with the final transcript. If you've selected a saved skill, it pre-fills the prompt with that skill's instructions.
+
+This runs automatically after the final audio segment has transcribed, so you get results without an extra click. If there's no prompt or nothing was recorded, nothing runs.
+
 ## Stopping and reviewing
 
 Click **Stop Recording** to end the audio capture. SupaNet:
 
 1. Stops the microphone stream.
 2. Sends any remaining audio chunks for transcription.
-3. Updates the status to "Recording stopped. Review and save."
+3. If you set a context prompt, automatically sends it to the assistant.
+4. Updates the status to "Recording stopped. Review and save."
 
 Review the transcript in the panel. If you see errors or want to adjust the text (manual edits aren't supported yet — this is planned), you can clear it all and start over, or save it as-is.
 
