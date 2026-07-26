@@ -20,7 +20,7 @@ On the sidebar under **Assets**, select **Meeting Notes**. You'll see a recordin
 
 ### Setup requirement
 
-Meeting Notes requires your workspace admin to configure the **OpenAI API key**. If you see an error like "Transcription is not configured," ask an admin to set the `OPENAI_KEY` edge-function secret. Once configured, transcription will work immediately.
+Meeting Notes requires your workspace admin to configure the **OpenAI API key**. Go to **Settings → Secrets** and create a workspace secret named `OPENAI_KEY` with your OpenAI API key as the value. If transcription isn't configured, you'll see a warning banner on the Meeting Notes page before you record. Once the secret is added, transcription will work immediately.
 
 ## Starting a recording
 
