@@ -18,13 +18,17 @@ Meeting Notes lets you capture conversations without manually typing:
 
 On the sidebar under **Assets**, select **Meeting Notes**. You'll see a recording panel, a text input for the meeting title, and a live transcript view.
 
+### Setup requirement
+
+Meeting Notes requires your workspace admin to configure the **OpenAI API key**. If you see an error like "Transcription is not configured," ask an admin to set the `OPENAI_KEY` edge-function secret. Once configured, transcription will work immediately.
+
 ## Starting a recording
 
 1. Enter a **meeting title** (e.g., "Weekly Standup" or "Client Call") — this is required before recording can start.
 2. Click **Start Recording**. SupaNet requests permission to access your microphone.
 3. Once granted, the microphone icon pulses red and the status shows "Recording...".
 
-The recording runs in the browser and never leaves your device until you save. Transcription happens every 10 seconds, so you see segments appear as they're processed.
+The recording runs in the browser and never leaves your device until you save. Transcription happens every 15 seconds, so you see segments appear as they're processed.
 
 ## Viewing the transcript
 
@@ -78,7 +82,7 @@ Transcription uses **OpenAI Whisper**, the same model that powers voice transcri
 - **Noisy environments** — Whisper is robust to background noise, but clarity improves the accuracy.
 - **Various audio formats** — the browser captures webm/opus format, and Whisper accepts it.
 
-Every 10 seconds of recording produces a transcription request, so even a long meeting is split into digestible chunks and processed efficiently.
+Every 15 seconds of recording produces a transcription request, so even a long meeting is split into digestible chunks and processed efficiently. Each chunk is recorded as a self-contained audio segment and sent to Whisper independently, so you see the transcript build up in real time.
 
 ## Microphone permissions
 
