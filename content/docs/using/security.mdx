@@ -89,6 +89,15 @@ Active **external MCP handles** expose their entire remote toolsets workspace-wi
 
 A **single admin** is a bus-factor risk — if that account is lost, so is administrative control. Promote a second trusted member to admin as a recovery path.
 
-To promote a member to admin, go to **Settings → Invite people** and scroll to the **Admin management** section. You'll see a list of all workspace members with their current role. Click **"Promote to admin"** next to a member's name, confirm the action, and they will immediately have full administrative access to governance surfaces (tools, guardrails, secrets, and settings).
+## Workspace members
 
-The section highlights when you have only a single admin so you remember to set up recovery coverage.
+Go to **Settings → Invite people** and scroll to the **Workspace members** section to manage all members. You'll see a list of all workspace members with options to:
+
+- **Promote to admin** — Grant a member full administrative access to governance surfaces (tools, guardrails, secrets, and settings). Only non-admin members get this button.
+- **Disable** — Temporarily prevent a member from accessing the workspace without deleting their account or content. Disabled members are marked with a "Disabled" badge and can be re-enabled anytime. Useful for access control when a member leaves temporarily or while investigating security concerns.
+- **Enable** — Restore access to a disabled member.
+- **Delete** — Permanently remove a member and all their associated content from the workspace. This action cannot be undone. Requires a confirmation prompt to prevent accidental deletion.
+
+You cannot disable your own account or perform actions on yourself. The section also prevents disabling or deleting the last remaining admin — promote another member to admin first if you need to.
+
+When you have only a single admin, the section highlights this as a recovery risk so you remember to set up backup coverage.
