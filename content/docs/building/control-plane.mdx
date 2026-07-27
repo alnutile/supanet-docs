@@ -39,6 +39,32 @@ Development continues on `main` (trunk-based, auto-deploys the main SupaNet inst
 
 This means **database migrations must stay backward-compatible one release back** (migrations in SupaNet are already additive and never destructive, so this is automatic).
 
+### Backend fan-out for tenants
+
+The frontend auto-updates from `release` (each tenant's Railway service rebuilds), but **database migrations and edge functions require explicit deployment**. A push to `release` that adds a new table but the tenant database never receives it causes frontend-calling-missing-schema errors.
+
+The **release fan-out workflow** (`.github/workflows/release-tenants.yml`) closes this gap: when you push to `release`, a GitHub Action automatically applies pending migrations and redeploys edge functions to **every live tenant**. The tenant list comes directly from the control plane's `tenants` table (the system of record), so no hand-kept registry is needed.
+
+**How it works:**
+
+1. **Tenant discovery** — `scripts/list-tenants.ts` queries the control plane's `tenants` table (via the Management API) for live projects (`status='active'` or `'past_due'`)
+2. **Migrations** — `scripts/apply-migrations.ts` applies pending migrations via the Management API SQL endpoint (no DB password needed, just the org PAT)
+3. **Functions** — `supabase functions deploy --project-ref <ref>` redeploys edge functions to each tenant
+
+All three steps run in parallel per tenant (max 4 at once), and a failure in one tenant never blocks the others (`fail-fast:false`).
+
+**Setup:**
+
+Add one repository **secret** (`SUPABASE_ACCESS_TOKEN` — the same org PAT used for the origin) and one **variable** (`CONTROL_PLANE_REF` — the control-plane project ref). The workflow triggers automatically on pushes to `release` that touch migrations, functions, or the tenant list.
+
+**Optional canary override:**
+
+Edit `infra/tenants.json` to pin the rollout to a subset of tenants (e.g. test one tenant first before rolling out to all). Set `refs` to a list of project refs; the workflow uses those instead of the live list. Leave `refs` empty or the file absent to roll out to all live tenants.
+
+**Dry-run:**
+
+Trigger the workflow manually via **Actions → Release to tenants → Run workflow**, check the **dry_run** box. It lists pending migrations per tenant without applying them.
+
 ## The provisioning engine
 
 The engine is the core: a pipeline of idempotent, resumable steps. Each step is recorded in a `progress` jsonb checklist on the provisioning job row, so a failed run re-enters at the failed step and never double-applies.
