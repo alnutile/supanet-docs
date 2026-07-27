@@ -73,7 +73,7 @@ JSON body:
 | `content` | yes | string | The artifact body. |
 | `type` | no | string | `markdown` (default), `code`, `html`, or `text`. |
 | `language` | no | string | Hint for code artifacts (e.g., `ts`, `py`). |
-| `visibility` | no | string | `private` (default), `unlisted`, or `public`. Non-private mints a `public_slug`. |
+| `visibility` | no | string | `private` (default), `workspace`, `unlisted`, or `public`. Only `unlisted` and `public` mint a `public_slug`. |
 | `collection` | no | string | Collection name or id (created if missing). |
 | `collections` | no | array | Array of collection names/ids (created if missing). |
 
@@ -175,15 +175,16 @@ default, but it can be shared with the workspace if you mark it shared in the UI
 
 ## Sharing and public links
 
-Setting `visibility` to `unlisted` or `public` mints a `public_slug`:
+Visibility options and their effects:
 
-- For **HTML artifacts**: you also get a `share_url` — a full-screen, sandboxed
-  page served by the app at `/p/<public_slug>`. The HTML runs in a secure iframe
-  so user code never executes on the app origin. Link it directly.
-- For **other types**: build the in-app link yourself:
-  `https://<app-origin>/share/a/<public_slug>`.
-
-Private artifacts are never exposed this way.
+- **private**: only the owner sees the artifact. No external link.
+- **workspace**: all team members can see and edit. No external link.
+- **unlisted** or **public**: mints a `public_slug` for external sharing.
+  - For **HTML artifacts**: you also get a `share_url` — a full-screen, sandboxed
+    page served by the app at `/p/<public_slug>`. The HTML runs in a secure iframe
+    so user code never executes on the app origin. Link it directly.
+  - For **other types**: build the in-app link yourself:
+    `https://<app-origin>/share/a/<public_slug>`.
 
 ## Authentication note
 
