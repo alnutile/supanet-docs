@@ -26,15 +26,28 @@ are there when you reach for them and out of the way when you do not.
 
 ### Creating and editing skills
 
-On the **Skills** page you can create new skills or edit your existing ones. When
-editing a skill, you have two useful tools:
+On the **Skills** page you can create new skills in several ways:
 
+**Create a new skill manually:**
+Click the **New skill** button to create one from scratch in the editor.
+
+**Upload a Markdown file:**
+Click the **Upload .md** button to import a skill from a `.md` file. The file must include:
+- A `name` field in the frontmatter (YAML between `---` markers)
+- An `instructions` section with the skill's prompt text
+
+This is great for sharing skills with teammates, editing them in your text editor, or
+importing skills that were exported from another workspace.
+
+**Edit and refine existing skills:**
+When editing a skill, you have two useful tools:
 - **Polish with AI** — asks the assistant to clean up and flesh out your skill
   draft. This is great for turning rough notes into a polished, clear prompt.
 - **Download as SKILL.md** — exports your skill as a portable Markdown file. You
   can share it with teammates, edit it outside SupaNet, or re-import it later.
 
-You can also ask the internal assistant to create skills directly. For example, in chat:
+**Ask the assistant to create one:**
+In chat, ask the assistant to create a skill directly. For example:
 "Create a skill that helps me draft standup notes from a list of tickets." The assistant
 will use the `create_skill` tool to create the skill and return a link to it in the dashboard.
 
