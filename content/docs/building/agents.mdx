@@ -34,6 +34,15 @@ On the Agents page, you can search and filter the list:
   those without schedules.
 - **Collections** — show agents filed into a specific collection.
 
+Each agent card shows:
+
+- **Name and description** — the agent's purpose.
+- **Schedule times** (if scheduled) — when the agent runs. If multiple schedules
+  exist, each is listed on its own line. The timezone (e.g., `(America/New_York)`)
+  is shown only for non-UTC cron schedules, so you can see at a glance when and where
+  the agent runs.
+- **Last updated** (if not scheduled) — when the agent was last modified.
+
 Agents with active schedules have a small green dot indicator next to their name
 so you can spot scheduled work at a glance.
 
