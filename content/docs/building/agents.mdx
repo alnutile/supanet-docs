@@ -70,6 +70,23 @@ When the preset intervals (every 5 minutes, hourly, daily, etc.) don't match you
 needs, you can use a standard 5-field **cron expression** to schedule an agent at
 exact times.
 
+### AI-assisted cron generation
+
+Instead of writing cron expressions by hand, describe your schedule in plain English
+and let the AI generate it for you. In the agent editor's schedule section, type
+something like:
+
+- "Friday 7am"
+- "Every weekday at 9am"
+- "15th of every month at 2pm"
+- "Last day of the month at 5pm"
+
+Then click **Generate cron** and the expression will be filled in automatically. This
+is a quick way to express schedules the presets don't cover without memorizing cron
+syntax.
+
+### Cron expression syntax
+
 A cron expression has five space-separated fields:
 
 ```
