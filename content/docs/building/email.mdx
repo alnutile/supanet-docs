@@ -34,10 +34,34 @@ subdomain as its own rule — the safe default for a send-to allowlist.
 
 ## Receiving
 
-Receiving is **inbound-parse, not IMAP**. The provider POSTs each incoming
-message to the public `email-inbound` edge function (token-gated like a webhook),
-which normalises it into the `inbox_messages` table. `check_email` then reads that
-table - so it is push, not polling.
+SupaNet supports two email ingestion paths:
+
+### Inbound-parse (provider push)
+
+The provider POSTs each incoming message to the public `email-inbound` edge function
+(token-gated like a webhook), which normalizes it into the `inbox_messages` table.
+`check_email` then reads that table — so it is push, not polling.
+
+### IMAP polling (user mailboxes)
+
+Members can register IMAP mailboxes (via **Inbox → Inboxes → Add inbox**) and the
+workspace automatically polls them. The `email-poll` edge function is cron-ticked
+every minute but respects each mailbox's `poll_interval_minutes` setting (1–1440
+minutes; default 5). It:
+
+- Opens an IMAP TLS connection to the mailbox's host.
+- Searches for messages with a UID greater than the last one ingested.
+- On a fresh inbox, backfills only the ~10 most recent messages.
+- Parses each message's RFC822 (headers, MIME body, base64/quoted-printable transfer encodings).
+- Dedupes on `Message-ID`.
+- Records any connection or parsing errors on the account's `last_error`.
+
+The mailbox password lives **only in Supabase Vault** (same pattern as the email
+provider key). New mail lands in `inbox_messages` (`source='email'`) and fires
+`message.received` events, so listeners can route them like any other message source.
+
+The pure RFC822 parser lives in `supabase/functions/_shared/imap.ts` and is
+unit-tested in `tests/imap_test.ts`.
 
 ## Where credentials live
 

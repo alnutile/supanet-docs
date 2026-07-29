@@ -32,11 +32,35 @@ When you send, the message lands in your inbox immediately.
 
 ## Receiving messages from external sources
 
-You can push messages into your inbox from anywhere — email providers, Slack, WhatsApp, your own scripts, or integrations like Zapier.
+You can receive messages in your inbox from multiple sources — IMAP email accounts, email providers, Slack, WhatsApp, your own scripts, or integrations like Zapier.
 
-### Email
+### Email via IMAP (pull your own mailbox)
 
-If you have email set up in your workspace, incoming emails automatically appear in the inbox with `source='email'`. See [Email](/docs/using/whats-possible) to configure inbound email.
+You can connect an IMAP mailbox to SupaNet and have the workspace automatically poll it for new messages. This is useful for monitoring mailboxes without relying on an email provider's push API.
+
+**To add an IMAP inbox:**
+
+1. Go to **Inbox** → **Inboxes** (top-right button).
+2. Click **Add inbox** and select a provider (Gmail, Outlook, Yahoo, iCloud, Fastmail, or enter custom settings).
+3. Enter your mailbox username (usually your full email address) and an **app password** — not your login password.
+4. Choose how often to check for new mail (1–1440 minutes; default 5 minutes).
+5. Decide if the inbox is **private** (only you see mail) or **workspace** (your team can see and file it).
+
+The workspace automatically polls your mailbox every minute, checking only accounts that are due (respecting their individual check intervals). New messages land in your inbox with `source='email'` and immediately fire a `message.received` event, so you can set up listeners to route them just like webhooks.
+
+> **Important:** Use an **app-specific password**, not your real login password. Almost every mail provider requires an app password once 2FA is enabled.
+>
+> - **Gmail/Google Workspace:** Google Account → Security → App passwords (generate for "Mail")
+> - **Outlook/Microsoft 365:** Account Security → App passwords
+> - **Yahoo:** Account Security → Generate app password
+> - **iCloud:** appleid.apple.com → App-Specific Passwords
+> - **Other providers:** Check your provider's security settings
+
+If connection fails (e.g., firewall blocking port 993), the error shows on your inbox card; other mailboxes aren't affected.
+
+### Email via provider inbound-parse (push)
+
+If you have email set up in your workspace with an email provider (Postmark, Resend, etc.), incoming emails automatically appear in the inbox with `source='email'`. See [Email](/docs/using/whats-possible) to configure inbound email.
 
 ### Anything else (Slack, WhatsApp, scripts, Zapier)
 
