@@ -56,6 +56,13 @@ The workspace automatically polls your mailbox every minute, checking only accou
 > - **iCloud:** appleid.apple.com → App-Specific Passwords
 > - **Other providers:** Check your provider's security settings
 
+#### Testing your inbox
+
+Before saving a new inbox or after changing its settings, you can test the connection:
+
+- Click **Test connection** to verify the mailbox credentials and see how many messages are in the folder. This proves login and folder access work before you save.
+- Click **Test message** to insert a synthetic test email that fires a `message.received` event. This lets you verify that your listeners and automations trigger correctly without waiting for real mail to arrive.
+
 If connection fails (e.g., firewall blocking port 993), the error shows on your inbox card; other mailboxes aren't affected.
 
 ### Email via provider inbound-parse (push)

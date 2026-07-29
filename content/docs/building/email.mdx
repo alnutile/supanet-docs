@@ -60,6 +60,15 @@ The mailbox password lives **only in Supabase Vault** (same pattern as the email
 provider key). New mail lands in `inbox_messages` (`source='email'`) and fires
 `message.received` events, so listeners can route them like any other message source.
 
+#### Testing without waiting
+
+The inbox editor has two testing buttons:
+
+- **Test connection** — the `imap-test` edge function (verify_jwt=true, signed-in users only) logs in and reports the folder's message count, so you can validate an app password before saving.
+- **Test message** — inserts a synthetic `source='email'` row and fires `message.received`, letting you wire and verify a listener end-to-end without waiting for real mail.
+
+A fresh inbox is also polled on the next 1-minute tick instead of waiting for its full interval, since it has no `last_checked_at` yet.
+
 The pure RFC822 parser lives in `supabase/functions/_shared/imap.ts` and is
 unit-tested in `tests/imap_test.ts`.
 
