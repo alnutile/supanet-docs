@@ -74,6 +74,17 @@ If connection fails (e.g., firewall blocking port 993), the error shows on your 
 
 If you need to re-import mail (e.g. after a config change or to recover messages already in the folder), click **Re-scan** — this resets the ingest cursor so the next poll re-imports the most recent mail.
 
+#### Routing new mail
+
+The inbox editor also has a **"When new mail arrives here"** section that lets you automatically route incoming messages to a destination while they still land in your inbox:
+
+- **Just add it to the Inbox** — no routing (default).
+- **Also save it to a table** — each message deterministically populates a row in one of your tables. Map message fields (sender, subject, body, received date) to columns using **dot-path tokens** like `{{event.data.subject}}` and `{{event.data.from_address}}`. No model is involved, so this is purely deterministic — the same as a webhook's direct-table mode.
+- **Also run an agent** — the agent receives the message as context and can process it however its instructions say.
+- **Also run a function** — invoke a custom tool directly on the message data.
+
+The routing runs through the same automation dispatcher as every other listener, so it appears on the [Listeners](/docs/using/automation) page (editable there, too). You can disable routing by selecting "Just add it to the Inbox" again.
+
 ### Email via provider inbound-parse (push)
 
 If you have email set up in your workspace with an email provider (Postmark, Resend, etc.), incoming emails automatically appear in the inbox with `source='email'`. See [Email](/docs/using/whats-possible) to configure inbound email.
