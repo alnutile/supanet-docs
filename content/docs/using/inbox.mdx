@@ -79,7 +79,8 @@ If you need to re-import mail (e.g. after a config change or to recover messages
 The inbox editor also has a **"When new mail arrives here"** section that lets you automatically route incoming messages to a destination while they still land in your inbox:
 
 - **Just add it to the Inbox** — no routing (default).
-- **Also save it to a table** — each message deterministically populates a row in one of your tables. Map message fields (sender, subject, body, received date) to columns using **dot-path tokens** like `{{event.data.subject}}` and `{{event.data.from_address}}`. No model is involved, so this is purely deterministic — the same as a webhook's direct-table mode.
+- **Also save it to a table (map fields to columns)** — each message deterministically populates a row in one of your tables. Map message fields (sender, subject, body, received date) to columns using **dot-path tokens** like `{{event.data.subject}}` and `{{event.data.from_address}}`. No model is involved, so this is purely deterministic — the same as a webhook's direct-table mode.
+- **Also save it to a table (whole message as JSON in one column)** — stores the entire message as a JSON object in a single column. Choose a table and a JSON-type column; the whole message will be saved there with all its fields intact. This is simpler than mapping individual fields and keeps the full message structure for later processing.
 - **Also run an agent** — the agent receives the message as context and can process it however its instructions say.
 - **Also run a function** — invoke a custom tool directly on the message data.
 
