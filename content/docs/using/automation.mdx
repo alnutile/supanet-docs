@@ -27,7 +27,10 @@ Each listener specifies:
   - **Your tables** — events from tables you've enabled as event sources (when a row is added).
   - **Seen recently** — any custom or one-off event types that have actually fired in your workspace.
   You can also type a custom event name if you want to listen for something that hasn't fired yet.
-- **Filters** (optional) — narrow it down (e.g., only in a specific collection, only from a specific source).
+- **Filters** (optional) — narrow it down:
+  - **Collection** — only items filed into a specific collection.
+  - **From source** — only messages from a specific source (e.g., email or Slack).
+  - **Inbox** — for `message.received` rules, target a specific mailbox (e.g. "when mail arrives in *this* inbox"). Leave blank to listen to all inboxes.
 - **Action** — what to do when it matches:
   - **Run an agent** — call an agent with the event data as context.
   - **Run a tool** — invoke a tool directly (no model).

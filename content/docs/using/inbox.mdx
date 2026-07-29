@@ -56,14 +56,23 @@ The workspace automatically polls your mailbox every minute, checking only accou
 > - **iCloud:** appleid.apple.com → App-Specific Passwords
 > - **Other providers:** Check your provider's security settings
 
-#### Testing your inbox
+#### Inbox options
 
-Before saving a new inbox or after changing its settings, you can test the connection:
+When editing an inbox, you can toggle:
+
+- **Active (polling on)** — whether the workspace polls this mailbox for new mail.
+- **Mark messages read on the server after importing** — by default, the poller marks each ingested message as `\Seen` on the IMAP server, so your mailbox reflects what's been pulled. Untick this to leave the folder untouched.
+
+#### Testing and re-scanning
+
+Before saving a new inbox or after changing its settings:
 
 - Click **Test connection** to verify the mailbox credentials and see how many messages are in the folder. This proves login and folder access work before you save.
 - Click **Test message** to insert a synthetic test email that fires a `message.received` event. This lets you verify that your listeners and automations trigger correctly without waiting for real mail to arrive.
 
 If connection fails (e.g., firewall blocking port 993), the error shows on your inbox card; other mailboxes aren't affected.
+
+If you need to re-import mail (e.g. after a config change or to recover messages already in the folder), click **Re-scan** — this resets the ingest cursor so the next poll re-imports the most recent mail.
 
 ### Email via provider inbound-parse (push)
 
