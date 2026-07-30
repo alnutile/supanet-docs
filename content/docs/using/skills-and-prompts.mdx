@@ -31,8 +31,18 @@ On the **Skills** page you can create new skills in several ways:
 **Create a new skill manually:**
 Click the **New skill** button to create one from scratch in the editor.
 
+**Import from a GitHub URL:**
+Click the **Import URL** button to load a skill directly from GitHub. You can paste:
+- A GitHub file URL: `https://github.com/user/repo/blob/main/skill.md`
+- A repository URL: `https://github.com/user/repo` (imports the README.md)
+- A gist URL: `https://gist.github.com/user/gist-id`
+
+The file must be in Markdown format and contain either a `name` in the frontmatter
+(YAML between `---` markers) or skill instructions. This is perfect for sharing skills
+as gists, collaborating on them in a repo, or importing community-built skills.
+
 **Upload a Markdown file:**
-Click the **Upload .md** button to import a skill from a `.md` file. The file must include:
+Click the **Upload .md** button to import a skill from a `.md` file on your computer. The file must include:
 - A `name` field in the frontmatter (YAML between `---` markers)
 - An `instructions` section with the skill's prompt text
 
