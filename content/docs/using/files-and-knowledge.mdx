@@ -10,13 +10,20 @@ questions from their contents.
 ## Uploading files
 
 Drop files into the Files page (or attach them in chat). Each file is stored
-privately under your account. When you want to share one, SupaNet can generate a
-**temporary share link** that works for a week, so you can hand a file to
-someone without making it public forever.
+privately under your account.
 
 You can view your files in **list view** (default) or **grid view** with
 thumbnails — toggle between them with the buttons near the Upload button. Your
 preference is saved and persists across sessions.
+
+## Sharing files
+
+Select one or more files and choose a share mode from the toolbar:
+
+- **Public** — publishes the file to a permanent public link. The file is copied to a separate public bucket, so you can bake the URL into a public artifact or static HTML page. The original private file is untouched. Once published, a "Public" badge on the file lets you copy the link or unpublish it (which removes the public copy).
+- **1 hour / 1 day / 1 week** — creates a temporary signed link that expires after the chosen window. These are useful for sharing with external parties for a limited time. Signing still only marks the file as "link shared" — the private original stays in the private bucket.
+
+A results modal shows all the generated links so you can copy them individually or all at once. For a single file, the link is automatically copied to your clipboard.
 
 ## Adding titles and descriptions
 
