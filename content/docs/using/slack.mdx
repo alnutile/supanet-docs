@@ -96,10 +96,24 @@ Every mention is logged:
 - **Activity feed** - replies log as `slack.reply`
 - **Usage page** - calls are tracked with `context = 'slack'` for cost tracking
 
+## Proactive posting
+
+The bot can now post messages to Slack on its own, not just reply to mentions. This unlocks use cases like:
+
+- A scheduled agent that posts a daily summary to #standup
+- A webhook that alerts #alerts when something happens
+- An always-on agent in Chat that proactively sends an update to a team channel
+
+Use the **`send_slack_message`** builtin tool:
+- **Channel**: Slack channel ID (e.g. `C0123456`) or name (e.g. `#general`). The bot must be a member of the channel.
+- **Text**: The message to post. Markdown is converted to Slack formatting (bold, links, etc.).
+- **Thread (optional)**: Reply in-thread by passing the parent message's timestamp (`thread_ts`).
+
+The tool is **inactive by default** — an admin must turn it on in **Settings → Slack** after connecting. Like `send_email`, it's rate-limited (30 posts per hour workspace-wide) and every post logs to the activity feed (`slack.sent`) so you can audit what went out and when.
+
 ## Not built yet
 
 - DMs to the bot (replying with just your own context)
-- `send_slack_message` builtin for agents to proactively post into bound rooms
 - In-channel `/` commands to manage bindings without leaving Slack
 - Per-thread cooldown / rate cap for ambient channels
 - Resolving Slack display names on captured inbox messages (they store the raw user id today)

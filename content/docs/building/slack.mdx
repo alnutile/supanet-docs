@@ -3,7 +3,7 @@ title: Slack
 description: Architecture and implementation of the Slack bot and channel bindings.
 ---
 
-The Slack integration lets the workspace bot join Slack channels and answer @mentions using collection context - the same architecture as [webhooks](/docs/building/webhooks) but triggered by Slack events instead of HTTP calls. In **ambient mode**, the bot listens to all channel messages and a cheap model decides whether to chime in unprompted (Claude-Tag style).
+The Slack integration lets the workspace bot join Slack channels and answer @mentions using collection context - the same architecture as [webhooks](/docs/building/webhooks) but triggered by Slack events instead of HTTP calls. In **ambient mode**, the bot listens to all channel messages and a cheap model decides whether to chime in unprompted (Claude-Tag style). The `send_slack_message` builtin also lets agents, scheduled runs, and webhooks proactively post into Slack channels.
 
 ## Overview
 
@@ -158,6 +158,35 @@ Ambient mode helpers:
 
 All unit-tested in `supabase/functions/tests/slack_test.ts`.
 
+## Proactive posting: `send_slack_message` builtin
+
+The `send_slack_message` builtin (handler in `_shared/builtins.ts`) is the inverse of the reactive @mention path: agents, scheduled runs, chat, and webhooks can now initiate posts to Slack instead of only replying to mentions.
+
+**Implementation:**
+- Validates channel (required, either ID or name) and message text (required)
+- Rate-limits: 30 posts per rolling hour workspace-wide (`activity_log` type `slack.sent`)
+- Reads the bot token from Vault via `read_slack_secrets()` (service-role-only)
+- Calls `postSlackMessage(botToken, channel, text, threadTs?)` from `_shared/slack.ts`
+- Logs `slack.sent` on success, `slack.error` on Slack API failure
+- Returns the result as a human-readable string
+
+**Access control** (like `send_email`):
+- Exfiltration-capable tool — gated by admin activation (default inactive in migration 0107)
+- Agent `tool_ids` scoping applies
+- Webhook `allow_tools` deterministic gate applies
+- Every post logs to activity feed for auditing
+
+**Input schema:**
+```json
+{
+  "channel": "C0123456 or #general",
+  "text": "The message to post",
+  "thread_ts": "ts of parent message (optional, for replies)"
+}
+```
+
+**Seeding** (migration 0107): The builtin is created with `is_active = false` so an admin must turn it on once Slack is connected.
+
 ## RPC functions
 
 **`set_slack_integration(p_bot_token, p_signing_secret, p_team_name?)`** (admin-gated, security-definer)
@@ -218,7 +247,6 @@ The channel ID and owner are immutable. To move a binding to a different channel
 ## Future directions
 
 - **DMs** - handle `message.im` (direct messages to the bot) and answer with the DM-er's own context (private collections, their files)
-- **`send_slack_message` builtin** - agents can proactively post into bound rooms
 - **In-channel commands** - `/slash` commands to manage bindings without leaving Slack
 - **Per-thread cooldown** - rate limit ambient replies in a single thread to avoid spam
 - **Display name resolution** - captured inbox messages currently store the raw Slack user id; resolve to display names for better readability
