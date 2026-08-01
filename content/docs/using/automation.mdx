@@ -106,6 +106,30 @@ keeps happening.
 
 **Timezones:** By default, scheduled agents (and all automations) reason about the current date and time in UTC. If your team is elsewhere, set the workspace timezone in **Settings → Timezone** — then every agent, listener, webhook, and Slack reply will know the correct "today" and "now" in your local time. New schedules will default to this timezone; existing ones keep theirs unless you change them manually.
 
+## Watching agents run
+
+Once you have agents set up, you might want to see what they are actually doing.
+Click the **Runs** button next to any agent on the Agents page to open its
+observability dashboard at `/agents/:id`.
+
+The dashboard shows:
+
+- **Recent runs** — a list of the last 50 times the agent ran, whether from chat,
+  a schedule, a webhook, or Slack. Each run shows its status, trigger, final
+  output, tool calls, duration, and when it happened.
+- **Expand a run** to see its step-by-step timeline — each model turn and tool
+  call in order, with the tool's input and output so you can debug what went
+  wrong (or right).
+- **Technical detail toggle** — hides per-step tokens and costs by default so
+  non-technical users see a cleaner view, but admins can flip it on to see the
+  full accounting.
+- **Live updates** — if a run is currently in progress and you expand it, the
+  steps tick in real time so you can watch the agent work.
+
+This is how you answer "Did my scheduled agent actually run this morning?" or
+"Why did the webhook agent choose that tool?" — see the full trace of what
+happened.
+
 ## The activity feed
 
 Whenever SupaNet does something on its own - uses a tool, processes a webhook,

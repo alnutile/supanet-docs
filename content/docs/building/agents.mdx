@@ -150,6 +150,36 @@ a time from a collection's dashboard. This lets you keep specialized agents
 grouped by project, workflow, or purpose, making it easy to discover which
 agents are available and give the assistant a directory of capabilities.
 
+## Agent run observability
+
+Every time an agent runs — whether from chat, a webhook, a schedule, or Slack —
+the system records a detailed trace of what happened:
+
+- **Run header**: when it started/ended, the surface it came from (chat, schedule,
+  webhook, or Slack), the model used, token usage, and cost.
+- **Step timeline**: each model turn and each tool call, with the tool's raw
+  input/output, duration, error status, and whether it was sandboxed.
+
+This trace lives in the `agent_runs` and `agent_run_steps` tables. On the
+**Agents page**, each agent card has a **Runs** button that opens `/agents/:id` —
+a dedicated observability page showing the agent's recent runs and their step-by-step
+timelines.
+
+On the detail page:
+
+- **Run cards** list recent invocations newest first, with status, trigger surface,
+  final output, tool count, and duration.
+- **Click a run** to expand it and see the step timeline — each model turn and tool
+  call in order.
+- **"Technical detail" toggle** reveals per-step tokens/cost and tool input/output
+  for debugging.
+- **Runs tick live** when expanded if the agent is still running, so you can watch
+  progress in real time.
+
+This is how you troubleshoot an agent that went sideways or verify one that's
+working well — you can see exactly which tools it called, what it passed them, and
+what came back.
+
 ## Why scope tools per agent
 
 Restricting an agent to specific tools is both a safety and a quality measure. A
