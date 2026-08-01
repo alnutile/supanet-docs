@@ -82,6 +82,10 @@ Admins read the log; only the edge function (service role) writes.
 ### Processing loop
 
 ```typescript
+const MAX_TOOL_TURNS = 16  // Slack @mentions get chat-sized runway for complex multi-step tasks
+const MAX_TOKENS = 8000    // Per-completion output budget
+const WALL_CLOCK_MS = 130_000  // Stop 20s before platform kills the worker (130s default, configurable via SLACK_MAX_WALL_MS)
+
 binding = slack_channel_bindings[channel_id]
 text = slackTextToPlain(stripBotMention(event.text))
 
@@ -103,11 +107,19 @@ systemPrompt += collCtx
 transcript = fetchSlackTranscript(channel_id, thread_ts?)
 userContent = formatTranscript(transcript) + user.asks + text
 
-// Agent loop
+// Agent loop with wall-clock guard
 messages = [system, user_content]
+result = ''
+const startedAt = Date.now()
 for turn in 0..MAX_TOOL_TURNS:
-  out = orComplete(messages, tools, ...)
+  // Finalize before platform timeout: post what we have rather than dropping the reply
+  if (Date.now() - startedAt > WALL_CLOCK_MS):
+    if (!result) result = 'This took longer than I could spend on it — try narrowing the request.'
+    break
+  
+  out = orComplete(messages, tools, maxTokens: MAX_TOKENS, ...)
   recordUsage(context='slack', ...)
+  result = out.content || result
   if out.toolCalls:
     dispatch tools (http / builtin / mcp) 
     append results, continue
@@ -171,6 +183,7 @@ All unit-tested in `supabase/functions/tests/slack_test.ts`.
 - **No loops** - bot messages (`bot_id` field) and message edits (`subtype` field) are skipped, so the bot cannot answer itself.
 - **Read-only by default** - `allow_tools=false` means the bot runs with no tools, only the model.
 - **Per-user access** - the binding runs as its creator, so collections context and builtin tools re-enforce that user's access in code.
+- **Wall-clock timeout** - The bot stops the tool loop and posts a reply 20 seconds before the platform kills the worker (130 seconds by default, overridable with `SLACK_MAX_WALL_MS`). This ensures a response is posted rather than timing out with no output.
 
 ## Binding a room
 

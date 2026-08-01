@@ -42,6 +42,8 @@ When someone @mentions the bot:
 
 The reply uses the binding's creator's access - so if you're an admin and bind a workspace-visibility collection, everyone in that room can use it.
 
+The bot is designed to handle complex, multi-step tasks: searching your collections, reading results, cross-referencing, and synthesizing answers. It gets up to 16 model→tool→model round-trips per reply and will post whatever it has produced if it runs out of wall-clock time (130 seconds), so you always get a response rather than a timeout.
+
 ## Tools and agents
 
 A channel binding can have an optional **agent**. When set, the bot uses the agent's instructions and can run its tools - but only if you enable the **Allow the agent's tools** checkbox on the binding.
