@@ -177,6 +177,55 @@ Once enabled, set up a listener on the **Automation → Listeners** page:
 The raw event includes the whole new row as JSON, so the listener has all the data
 it needs to work with.
 
+## Public write-forms
+
+You can let anonymous visitors submit data directly into your table from a shared web page — without giving them access to the whole table or needing them to sign up. This is useful for:
+
+- **Contact forms** — collect inquiries from your website.
+- **Signup sheets** — gather registrations or RSVPs.
+- **Feedback forms** — let readers give input on your blog or article.
+- **Application forms** — take applications for jobs, scholarships, events.
+
+The form is just HTML you paste into a shared artifact or your own website. Only the columns you choose are ever written, and submitters can't read anyone else's rows or anything outside the allowed fields.
+
+### Creating a form
+
+1. Open the table and click the **Forms** button in the toolbar.
+2. Click **New form** to create one.
+3. Give it a name (the title visitors will see).
+4. Check the columns you want to collect. For each column, you can mark it **required**
+   if you want to enforce that visitors fill it in.
+5. Click **Create form**. SupaNet generates a unique token and an HTML snippet.
+
+### Using the form
+
+Click **Embed** on the form card and copy the HTML snippet. Paste it into:
+
+- A shared HTML artifact (create a new artifact, pick type "HTML", paste the snippet)
+- Your own website or landing page
+- An embedded iframe anywhere
+
+The form is self-contained — no dependencies, no buttons to wire up. Visitors fill it in and click **Submit**, and one new row appears in your table.
+
+### Managing forms
+
+- **Pause a form** — click the **Active** / **Paused** badge to turn off submissions temporarily.
+- **Track submissions** — the form card shows a running count of how many rows it's
+  added to the table.
+- **Delete a form** — click the trash icon. Any page using its link will stop working
+  (the form won't accept submissions).
+
+### Limits and safety
+
+- **Column allow-list** — only the columns you picked in the form are written. Any other
+  data in the submission is dropped.
+- **Type checking** — submitted values are validated for the column type (e.g., numbers
+  must actually be numbers). If validation fails, the submission is rejected.
+- **Rate limiting** — each form is capped at 60 submissions per hour to prevent spam.
+  You can adjust this in the form settings.
+- **No reads** — the form can only WRITE rows. Visitors can never read your table, even
+  a filtered view of it.
+
 ## Using tables in Chat
 
 The assistant has tools to work with your tables:
