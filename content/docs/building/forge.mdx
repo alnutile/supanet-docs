@@ -42,10 +42,10 @@ a manual fallback:
   workflow automatically deploys edge functions to every tenant, so new forged
   functions go live without any action.
 - **In-app deploy** is only needed if you want to redeploy from inside the app
-  (e.g. to iterate locally). To enable the buttons, add a `FORGE_PAT` edge-function
-  secret — a Supabase Management API personal access token. Without it, you'll see
-  "In-app deploy is not set up on this project". The project ref auto-derives from
-  `SUPABASE_URL`.
+  (e.g. to iterate locally). It requires a `FORGE_PAT` edge-function secret — a
+  Supabase Management API personal access token. If it's not configured, the Deploy
+  maintenance panel shows a note that edge functions are managed centrally on your
+  workspace. The project ref auto-derives from `SUPABASE_URL`.
 
 ## Security model
 
