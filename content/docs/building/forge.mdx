@@ -24,13 +24,28 @@ webhooks, and the scheduler can all call it like any other custom tool.
 1. An admin describes the capability on the Forge page.
 2. The admin-only `forge` edge function generates the function source with the
    orchestrator model.
-3. It deploys the function to the project via the Supabase Management API.
+3. It deploys the function to the project via the Supabase Management API (requires
+   the `FORGE_PAT` edge-function secret).
 4. It registers the new function as an `http` tool, linked back to the Forge
    record.
 
 The generated code is just an `async function handler(input)`. A **fixed harness**
 owns request handling, CORS, and a per-function token check, so the
 security-critical plumbing is never the model's to write.
+
+## Deployment
+
+In-app Forge deploys via the **Deploy maintenance** panel are optional and
+a manual fallback:
+
+- **Recommended:** Push to the `release` branch instead. The repository's fan-out
+  workflow automatically deploys edge functions to every tenant, so new forged
+  functions go live without any action.
+- **In-app deploy** is only needed if you want to redeploy from inside the app
+  (e.g. to iterate locally). To enable the buttons, add a `FORGE_PAT` edge-function
+  secret — a Supabase Management API personal access token. Without it, you'll see
+  "In-app deploy is not set up on this project". The project ref auto-derives from
+  `SUPABASE_URL`.
 
 ## Security model
 
