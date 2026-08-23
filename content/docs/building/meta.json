@@ -12,6 +12,7 @@
     "tools",
     "artifact-api-reference",
     "todos-api-reference",
+    "knowledge-compiler",
     "forge",
     "guardrails",
     "security",

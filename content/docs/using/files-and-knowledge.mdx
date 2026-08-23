@@ -34,20 +34,42 @@ When you upload a file, SupaNet assigns it a filename. You can add a **title** a
 
 These fields are searchable and help teammates understand what each file contains at a glance. They are also used when linking files into artifacts (see below).
 
-## Turning PDFs into knowledge
+## From files to compiled knowledge
 
-This is the part that makes SupaNet feel smart about *your* world.
+SupaNet transforms raw documents into maintained understanding.
 
-When you upload a PDF, SupaNet quietly does the following in the background:
+Instead of searching PDFs from scratch on every question — which means the
+assistant re-interprets everything, context repeats, and contradictions hide —
+SupaNet can compile your files, links, notes, and messages into a **knowledge
+layer**. Compiled pages are durable reference prose (concepts, decisions,
+processes, people, projects) with evidence cited inline. They accumulate. They
+remember.
+
+### Two approaches: search, or compile
+
+**Search** works when you need the exact wording or you're still gathering
+information. You upload a PDF, SupaNet indexes it, and the assistant pulls in
+relevant passages when you ask a question.
+
+**Compile** works when you want to maintain living reference material. The
+compiler interprets your files, links, notes, and messages into a structured
+knowledge layer, detects contradictions, and flags when information gets stale —
+so answers are grounded in stable, cited understanding instead of re-read raw
+documents.
+
+You can use either, both, or neither.
+
+### How search works
+
+When you upload a PDF, SupaNet does the following in the background:
 
 1. Pulls the text out of the PDF.
 2. Breaks it into small chunks.
-3. Builds a searchable index of those chunks using **hybrid retrieval** — both semantic search (understanding meaning) and keyword search (matching exact terms).
+3. Builds a searchable index using **hybrid retrieval** — both semantic search (understanding meaning) and keyword search (matching exact terms).
 
-After that, the assistant can search across your PDFs and pull in the relevant
-passages when you ask a question. It tells you **which document** each answer
-came from and when it was last updated, so you can trust, verify, and assess
-freshness of the information.
+The assistant can then search across your PDFs and pull in relevant passages
+when you ask a question. It tells you **which document** each answer came from
+and when it was last updated, so you can trust and assess freshness.
 
 ### How hybrid search works
 
@@ -65,6 +87,53 @@ later, it is searchable.
   Right now this works for PDFs that contain real text. Scanned PDFs that are
   just images of text are not searchable yet.
 </Callout>
+
+### Compiling knowledge
+
+Knowledge compilation turns a collection into a maintained reference layer. To
+start compiling:
+
+1. Go to **Knowledge** (sidebar, under Assets).
+2. Choose a collection in the **Policy** tab.
+3. Set the collection's compilation settings — especially **Autonomy**, which
+   controls how freely the compiler can write:
+   - **Suggest** — propose everything to you for review
+   - **Guarded** *(default)* — create and add freely, ask before rewriting
+   - **Auto** — create, add, and rewrite freely (ask only before wholesale replacement)
+4. Click **Compile now**, or schedule a nightly pass via Automation.
+
+The compiler then:
+- Gathers new files, links, notes, and messages in that collection
+- Extracts structured understanding (concepts, decisions, people, processes, etc.)
+- Updates your compiled pages or creates new ones
+- Flags contradictions and stale entries for human review
+- Emits a change brief so you can see what changed
+
+#### The Knowledge dashboard
+
+**Knowledge** (Assets) has four tabs:
+
+- **Review** — conflicts and held updates. Leads on purpose because contradictions matter.
+- **Compiled** — your maintained pages, grouped by kind (concept, decision, process, person, project, terminology, principle, question, profile).
+- **Briefs** — what each pass changed, with a live checklist while one runs.
+- **Policy** — edit the trust boundary per collection, and trigger compilation.
+
+#### Trust and contradictions
+
+Compilation is **not** unrestricted. The trust boundary controls:
+
+- **What gets compiled** — files, links, messages, artifacts, to-dos, notes
+- **What page kinds** — concepts, decisions, people, processes, decisions, etc.
+- **How much autonomy** — from "suggest everything" to "rewrite freely"
+- **Safety guards** — page kind, labels, or title (e.g. mark "financial commitments" as always-review)
+
+When new evidence contradicts existing knowledge, the compiler **never** decides
+who is right. It flags the contradiction, marks the page disputed, and asks you.
+Options: use the new source, keep the old one, or dismiss.
+
+This is why: a bad source in a one-off search is isolated. A bad source folded
+into compiled knowledge spreads into every answer built on it. So contradictions
+are caught explicitly, not swept under the rug.
 
 ## Shared by default, private when you want
 

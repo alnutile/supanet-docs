@@ -1,0 +1,213 @@
+---
+title: Knowledge Compiler
+description: How the knowledge compiler works, how it handles conflicts and contradictions, and how to extend it with agents and tools.
+---
+
+The knowledge compiler transforms the workspace from a searchable archive into a maintained knowledge base. Instead of re-interpreting raw documents on every question, the compiler extracts structured understanding, maintains it, flags contradictions, and builds answers from compiled pages first.
+
+## The problem it solves
+
+The old flow: add information → search for it later → generate an answer. The model re-interprets raw documents every time. Nothing accumulates.
+
+The new flow: add information → interpret it → link it → update existing knowledge → flag conflicts → produce a brief.
+
+**The key distinction:** raw files are now *evidence*, not answers. Answers live on compiled pages, and every claim carries a pointer back to its source.
+
+## Architecture
+
+### Three layers
+
+```
+raw/                     files, links, inbox messages, meeting notes, artifacts, to-dos
+  ↓
+compiled/                knowledge_pages (new)
+  ↓
+outputs/                 artifacts, answers
+```
+
+### Pipeline
+
+```
+Capture    → a file/link/message lands in a collection
+Gather     → sources added since the last pass
+Extract    → claims, concepts, decisions, conflicts (one model call)
+Match      → against existing compiled pages
+Update     → within the collection's TRUST BOUNDARY
+Flag       → contradictions and stale entries → human review
+Brief      → change report of everything the pass did
+```
+
+Two properties are critical:
+
+1. **Fails closed.** A model reply that doesn't parse compiles *nothing*. An update the policy won't allow becomes a review item, never a silent write.
+2. **Never resolves contradictions.** When new evidence disagrees with a compiled page, the page is marked `contradicted` and a conflict is raised. Humans decide.
+
+## Schema and RLS
+
+### Key tables
+
+`knowledge_pages` — maintained pages with:
+- `key`: stable slug for in-place overwrites
+- `status`: compiled, needs-review, contradicted, stale, confirmed, archived
+- `human_confirmed`: whether a person reviewed this page
+- Owner + workspace RLS (mirrors collections)
+
+`knowledge_claims` — provenance layer:
+- `statement`, `source_kind`/`source_id`/`source_label`
+- `captured_at`, `confidence`
+- normalized `fingerprint` (deduplication)
+
+`knowledge_links` — explicit relationships between pages and sources.
+
+`knowledge_conflicts` — the review queue:
+- `conflict_type`: conflict or held
+- The body the compiler wanted to write (so approving is a click, not a re-run)
+
+`compile_runs` — pass metadata + change briefs:
+- `progress`: live checklist while running
+- `status`: running, completed, error
+
+`compile_policies` — per-collection trust boundary:
+- `enabled`, `autonomy` (suggest/guarded/auto)
+- `compile_sources` (which raw kinds feed it)
+- `maintain_kinds` (which page kinds it maintains)
+- `never_auto` (guards matched against kind, labels, title)
+- `min_confidence`, `stale_days`
+
+### RLS
+
+`knowledge_*` tables mirror collections: owner-only + workspace-visible rows. The `compile_policies` table is owner+admin writable.
+
+### Realtime
+
+`knowledge_pages`, `compile_runs`, and `knowledge_conflicts` are in the `supabase_realtime` publication. The Knowledge UI (`KnowledgePage`) subscribes for live updates.
+
+## Trust boundary
+
+Compilation is **not** unrestricted autonomous editing. Updates are ranked by destructiveness — `create` < `append` < `revise` < `supersede` — and autonomy sets the ceiling on what may be written unattended:
+
+| Level | Applies | Goes to review |
+| --- | --- | --- |
+| `suggest` | nothing | everything |
+| `guarded` *(default)* | create, append | revise, supersede |
+| `auto` | create, append, revise | supersede |
+
+`supersede` (wholesale replacement) **always** needs a human, at every level.
+
+Regardless of autonomy, an update goes to review when:
+
+- The target page matches a `never_auto` guard
+- The update contradicts existing compiled knowledge
+- The page is human-confirmed and the update isn't an append
+- The update's confidence is below the threshold
+- The operation is a `supersede`
+
+The whole decision is one pure function: `classifyUpdate` in `supabase/functions/_shared/compiler.ts`. It is heavily unit-tested because it stands between "new evidence arrived" and "the machine rewrote a page nobody re-read".
+
+## Conflicts and held updates
+
+Two categories land in the review queue:
+
+- **Conflict** — genuine contradiction between new evidence and an existing compiled page. The page is marked `contradicted` and waits.
+- **Held** — an update the trust boundary declined. It is parked *with the body it wanted to write*, so approving it later is a click rather than a re-run.
+
+Resolving is always a human decision. Options: **use the new source** (applies it and marks the page confirmed), **keep what we have** (clears the dispute), or **dismiss**.
+
+Because a person just read it, resolving marks the page `human_confirmed` — and its freshness clock restarts.
+
+## Compiled-first context
+
+The key integration point. `loadCollectionsContext` now leads with a collection's compiled pages and follows with raw material, labelled as evidence. Pages marked stale or contradicted are flagged inline so the assistant says what's disputed rather than asserting it.
+
+Collections with nothing compiled yet are unchanged — the raw block is all there is.
+
+`search_documents` still works. It becomes the fallback for "nothing compiled yet", "I need the exact wording", and "this page is disputed" — rather than the primary intelligence layer.
+
+## Integration
+
+### Builtin tools
+
+Eight seeded `is_builtin` tools in `_shared/compiler_tools.ts`, exposed to every agent loop and over MCP:
+
+- `compile_collection` — run a pass, returns the change brief
+- `list_knowledge_pages` — the compiled layer
+- `get_knowledge_page` — one page in full with claims
+- `update_knowledge_page` — author or maintain a page directly (append/revise only, respects human-confirmed boundary)
+- `list_conflicts` — what awaits human decision
+- `resolve_conflict` — record a decision
+- `get_change_brief` — what a pass changed
+- `set_compile_policy` — edit the trust boundary
+
+`update_knowledge_page` is deliberately narrower than the compiler itself: append and revise only, never supersede, and human-confirmed pages append-only — the same invariant `classifyUpdate` enforces, so there is no way to route around the trust boundary.
+
+### Edge function
+
+The **`compile` edge function** (`verify_jwt: false`):
+
+```
+POST /functions/v1/compile
+Authorization: Bearer <session JWT or mcp_tokens>
+Content-Type: application/json
+{
+  "collection": "Money Plan",
+  "dry_run": true
+}
+```
+
+Auth is a session JWT or `mcp_tokens` bearer, like `run-tool`. Add `"background": true` to fire and follow `compile_runs` instead of waiting.
+
+The function:
+1. Gathers new sources added since the last pass
+2. Extracts claims via one model call
+3. Matches against existing pages
+4. Updates within the policy boundary
+5. Flags contradictions and held updates
+6. Writes a change brief
+
+All orchestrated by `supabase/functions/compile/index.ts`.
+
+### Scheduled compilation
+
+Compilation is an ordinary builtin, so a nightly pass is an agent scoped to `compile_collection` on a `schedules` row — no new plumbing.
+
+### Events
+
+Each pass emits `knowledge.compiled`. Each conflict emits `knowledge.conflict_detected`. Listeners can route a brief to Slack, email, or react to contradictions via the standard `event_listeners` / `event_dispatch` system.
+
+## Browser integration
+
+`src/lib/compiler.ts` is the browser mirror of the compiler vocabulary:
+- Status display labels and tones
+- Policy round-trip (read/write)
+- Run summaries and grouping
+
+All pure and unit-tested.
+
+`src/pages/KnowledgePage.tsx` is the Knowledge dashboard with four tabs:
+
+- **Review** — conflicts and held updates (leads on purpose)
+- **Compiled** — maintained pages grouped by kind
+- **Briefs** — what each pass changed, live checklist while running
+- **Policy** — per-collection trust boundary, compile now button
+
+## Risk mitigation
+
+Compilation amplifies mistakes. A bad source in a search result is isolated; a bad source folded into compiled knowledge spreads into every answer. That is why:
+
+- Automatic compilation is only for low-risk, additive knowledge
+- Human approval required for contradictions and rewrites
+- `never_auto` guards for financial commitments, client-facing, published content
+- Explicit provenance on every claim
+- A compiled page's own artifact mirror is excluded from the source sweep
+
+## Files
+
+| Path | Purpose |
+| --- | --- |
+| `supabase/functions/_shared/compiler.ts` | Pure core — policy, prompt, parsing, matching, trust boundary, staleness, briefs |
+| `supabase/functions/tests/compiler_test.ts` | 61 unit tests weighted toward the trust boundary |
+| `supabase/functions/compile/index.ts` | The pass orchestrator |
+| `supabase/functions/_shared/compiler_tools.ts` | Eight builtins, shared with MCP |
+| `src/lib/compiler.ts` | Browser mirror (labels, policy, grouping) |
+| `src/pages/KnowledgePage.tsx` | Knowledge dashboard |
+| `supabase/migrations/0112_knowledge_compiler.sql` | Schema, RLS, events, seeded tools, always-on prompt |
