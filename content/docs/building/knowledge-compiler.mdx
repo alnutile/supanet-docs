@@ -109,7 +109,7 @@ The whole decision is one pure function: `classifyUpdate` in `supabase/functions
 Two categories land in the review queue:
 
 - **Conflict** — genuine contradiction between new evidence and an existing compiled page. The page is marked `contradicted` and waits.
-- **Held** — an update the trust boundary declined. It is parked *with the body it wanted to write*, so approving it later is a click rather than a re-run.
+- **Held** — an update the trust boundary declined. It is parked *with the body it wanted to write*, so approving it later is a click rather than a re-run. The page it targets is flagged `needs-review` and the compiled-context block says so inline — otherwise the page keeps reading as settled truth while the revision waits in the queue, and the review gate quietly becomes a staleness bug. A page already marked `contradicted` keeps that worse flag; a human-confirmed page keeps its sign-off, since a machine's suggestion does not retroactively un-confirm what a person accepted.
 
 Resolving is always a human decision. Options: **use the new source** (applies it and marks the page confirmed), **keep what we have** (clears the dispute), or **dismiss**.
 
@@ -117,11 +117,13 @@ Because a person just read it, resolving marks the page `human_confirmed` — an
 
 ## Compiled-first context
 
-The key integration point. `loadCollectionsContext` now leads with a collection's compiled pages and follows with raw material, labelled as evidence. Pages marked stale or contradicted are flagged inline so the assistant says what's disputed rather than asserting it.
+The key integration point. `loadCollectionsContext` now leads with a collection's compiled pages and follows with raw material, labelled as evidence. Any page that is not plainly current — contradicted, awaiting review, or stale — is flagged inline so the assistant qualifies it rather than asserting it.
 
 Collections with nothing compiled yet are unchanged — the raw block is all there is.
 
-`search_documents` still works. It becomes the fallback for "nothing compiled yet", "I need the exact wording", and "this page is disputed" — rather than the primary intelligence layer.
+That inline flagging is load-bearing, not decoration. Compilation's failure mode is *confidence*: a compiled page reads as settled truth in a way a pile of raw documents never does, so anything less than settled has to say so in the same breath it is quoted.
+
+`search_documents` still works and still matters. It becomes the fallback for "nothing compiled yet", "I need the source's exact wording", and "this page is disputed" — rather than the primary intelligence layer.
 
 ## Integration
 
