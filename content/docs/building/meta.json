@@ -23,6 +23,7 @@
     "webhooks",
     "slack",
     "email",
+    "dropbox",
     "memory",
     "data-model",
     "teach-supanet-about-itself"

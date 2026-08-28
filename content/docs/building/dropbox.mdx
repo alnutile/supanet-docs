@@ -1,0 +1,76 @@
+---
+title: Dropbox
+description: Fetch rich metadata from Dropbox links using workspace credentials.
+---
+
+SupaNet can connect to Dropbox to fetch enhanced metadata when users or agents save Dropbox links — file names, thumbnails, and file details. An admin configures a personal Dropbox access token in **Settings → Dropbox**, and the system automatically enriches links with richer previews and information.
+
+## Setup
+
+An admin performs setup once in **Settings → Dropbox**:
+
+1. Go to [Dropbox App Console](https://www.dropbox.com/developers/apps)
+2. Create a new app (or use an existing one)
+3. Select **Scoped access** and **Full Dropbox** access
+4. Under **Permissions**, enable:
+   - `files.metadata.read`
+   - `files.content.read`
+   - `sharing.read`
+5. Go to **Settings** and generate an access token
+6. Paste the token into SupaNet's Settings → Dropbox page
+7. Click **Connect Dropbox**
+
+The access token is stored **only in Supabase Vault** — never in a table, config file, or client payload. The Settings page offers a **Test connection** button to verify the token works before saving.
+
+## How it works
+
+When a user or agent saves a Dropbox link (via the Links page or the `save_link` builtin tool):
+
+1. SupaNet detects it's a Dropbox URL (either a share link or personal folder URL)
+2. The `dropbox-meta` edge function (verify_jwt: true) reads the workspace's token from Vault
+3. It calls the Dropbox API to fetch file metadata (name, type, size, modification date)
+4. For image files, it also fetches a thumbnail
+5. The link card updates with the enriched title, description, and preview image
+
+Supported Dropbox URL formats:
+
+- **Share links:** `https://www.dropbox.com/s/abc123/filename.pdf`
+- **File request links:** `https://www.dropbox.com/scl/fi/xyz/file.pdf?rlkey=...`
+- **Personal folder URLs:** `https://www.dropbox.com/home/folder/file.txt`
+
+## Metadata enrichment
+
+Dropbox links are enriched with:
+
+- **Title** — the actual file name (e.g., `project-proposal.pdf`)
+- **Description** — the file path (`Dropbox file: /Projects/Proposals/project-proposal.pdf`)
+- **Preview image** — a thumbnail for image files (JPG, PNG, GIF, BMP)
+- **File type** — whether it's a file or folder
+- **File size** — in bytes
+- **Modified date** — when the file was last changed
+
+Generic OpenGraph metadata is bypassed — Dropbox metadata takes precedence for Dropbox URLs.
+
+## Where credentials live
+
+The access token lives **only in Supabase Vault**. The non-secret config sits in the `public.integrations` table with a `secret_id` pointer; the actual token is never a table column, never in a client payload, and never logged.
+
+The flow:
+
+- An admin writes the token solely through an admin-gated, security-definer RPC (`set_dropbox_integration`), which checks admin status in its body.
+- The `dropbox-meta` edge function reads the decrypted token only through a service-role-only RPC (`read_dropbox_secret`).
+- An admin can delete the integration via `delete_dropbox_integration`, which removes both the Vault secret and the config row.
+
+## Availability
+
+The Dropbox integration is:
+
+- **Admin-configured** — only admins can connect or disconnect it in Settings
+- **Workspace-wide** — when configured, all members can save Dropbox links and benefit from enriched metadata
+- **Optional** — the feature gracefully degrades if Dropbox is not configured; links still work, they just won't have Dropbox-specific metadata
+
+## Not yet built
+
+- One-click ingestion of Dropbox files as artifacts
+- Support for reading file contents (read-only `files.content.read` permission is granted but not yet used)
+- Per-user Dropbox tokens (currently workspace-wide only)
