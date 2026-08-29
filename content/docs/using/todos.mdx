@@ -3,27 +3,45 @@ title: To-dos
 description: Capture tasks, organize them into collections, and check them off.
 ---
 
-A **to-do** is a task you want to track. SupaNet gives you a simple task list where
-you can create to-dos, assign due dates, organize them into collections, and check
-them off as you complete them.
+A **to-do** is a task you want to track. SupaNet gives you a task list where you can
+create to-dos, move them through lifecycle lanes, assign due dates, organize them into
+collections, and check them off as you complete them.
 
 ## Why to-dos are useful
 
 To-dos are a lightweight way to capture work without leaving SupaNet. You can:
 
 - **Capture tasks** with a title and optional notes.
+- **Move through lifecycle lanes** — triage (new), next (committed), doing (in progress),
+  blocked (waiting), done (complete) — so you can see what's moving and what's stuck,
+  not just open vs. closed.
 - **Set due dates** to stay on top of deadlines.
 - **Organize into collections** — group related tasks so the assistant can access them
   as context when you chat.
 - **Check them off** as you complete work.
-- **Reorder manually** by dragging tasks to match your priorities.
+- **View in five ways** — List (your manual order), Board (by lane), Time (by due date),
+  Calendar (month grid), or Focus (one at a time).
 - **Share with your team** — mark a task as workspace-visible so everyone can
-  collaborate, check off their own copies, and see updates in real time.
+  collaborate, move tasks between lanes, and see updates in real time.
 
 ## Where to find your to-dos
 
-On the sidebar under **Assets**, select **To-dos**. You'll see all your tasks in
-a list, with options to create, edit, and delete them.
+On the sidebar under **Assets**, select **To-dos**. You'll see all your tasks in one of five views,
+with options to create, edit, move, and delete them.
+
+## Views
+
+Switch between views using the buttons at the top of the page:
+
+- **List** — your manual drag-and-drop order (default).
+- **Board** — tasks organized by lane (triage, next, in progress, blocked, done). Drag to move
+  a task to a different lane.
+- **Time** — tasks organized by due date (overdue, today, this week, later, no date). Drag to
+  reschedule a task.
+- **Calendar** — month grid showing due dates, with an undated pile. Drag a task onto a day
+  to schedule it.
+- **Focus** — one task at a time, hardest-to-ignore first (overdue tasks first, then due today,
+  then blocked, then agent-filed triage). Perfect for getting things done.
 
 ## Creating and editing to-dos
 
@@ -39,22 +57,36 @@ on hover on desktop, always visible on mobile). A detail modal opens where you c
 
 - Edit the title and notes.
 - Change the due date.
+- Move the task to a different lane.
 - Toggle between private and workspace visibility.
 - Check off the task.
 - Delete it.
 
 You can also click a to-do from a collection detail view or deep-link directly to it via the global search.
 
-## Sorting and filtering
+## Lifecycle lanes
 
-Use the sort toggle to order tasks by:
+Each to-do sits in one of five lanes:
+
+- **Triage** — new, not looked at yet. This is where to-dos filed by the assistant land, so a person
+  reviews them first.
+- **Next** — committed to but not started. Click on a task in the Board view to move it here.
+- **Doing** — actively being worked.
+- **Blocked** — waiting on someone else or for something outside your control.
+- **Done** — closed and complete. Checking off a task moves it here.
+
+Lanes help you see what's in motion vs. stuck, even when everything in the list is technically "open".
+
+## Sorting and filtering (List view)
+
+The List view supports sorting. Use the toggle to order tasks by:
 
 - **Position** (default) — your manual drag-and-drop order.
 - **Due date** — earliest deadlines first.
 
-Use the **quick search box** on the page to filter tasks by title or notes. This scopes
-the list to tasks matching your query — useful alongside global search (⌘K) for finding
-tasks within the To-dos page.
+Use the **quick search box** on the page to filter tasks by title or notes across all views.
+This scopes the list to tasks matching your query — useful alongside global search (⌘K) for
+finding tasks within the To-dos page.
 
 ## Collections and chat context
 
@@ -66,10 +98,10 @@ has access to the artifacts, files, and to-dos in that collection.
 
 ### Filtering by multiple collections
 
-On the To-dos page, you can click the collection filter buttons at the top to
-narrow the list. You can select **multiple collections at once** — a task will
-appear if it belongs to **any** of the selected collections (union). This lets
-you see tasks from related collections without switching between filtered views.
+On the To-dos page, use the **Collections** picker at the top to narrow the list.
+You can select **multiple collections at once** — a task will appear if it belongs
+to **any** of the selected collections (union). This lets you see tasks from related
+collections without switching between filtered views.
 
 When you have multiple collections selected and create a new to-do, it's
 automatically filed into all of them, so it shows up in all your focused views.

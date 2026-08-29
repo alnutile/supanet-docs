@@ -52,7 +52,8 @@ sorting, and paging.
 **Query parameters:**
 
 - `collection=<name|id>` — filter to to-dos in this collection (by name or ID).
-- `status=open|done` — `open` for incomplete, `done` for completed.
+- `status=open|done|triage|next|doing|blocked` — `open` for incomplete, `done` for completed,
+  or one lifecycle lane.
 - `q=<text>` — search by title (case-insensitive substring match).
 - `sort=position|due` — `position` (default, your manual drag order) or `due` (by due date).
 - `limit=<1-200>` (default 100) — items per page.
@@ -69,6 +70,8 @@ sorting, and paging.
       "notes": "Include tests and docs",
       "due_date": "2026-07-15",
       "done": false,
+      "status": "next",
+      "source": "api",
       "completed_at": null,
       "position": 0,
       "visibility": "private",
@@ -87,6 +90,8 @@ sorting, and paging.
 - `notes` — optional details or sub-tasks.
 - `due_date` — optional deadline (YYYY-MM-DD format).
 - `done` — whether the task is completed.
+- `status` — lifecycle lane: `triage`, `next`, `doing`, `blocked`, or `done`.
+- `source` — where the to-do came from: `api`, `agent`, `inbox`, or `null` (added by hand).
 - `completed_at` — timestamp when marked done (null if still open).
 - `position` — manual sort order (used by default in the UI).
 - `visibility` — `private` (you only) or `workspace` (everyone).
@@ -103,7 +108,8 @@ Creates a new to-do. Returns `201 Created` with the created to-do and its collec
   "title": "Ship the feature",           // required
   "notes": "Include tests and docs",     // optional
   "due_date": "2026-07-15",              // optional, YYYY-MM-DD format
-  "done": false,                          // optional (default false)
+  "status": "next",                      // optional lane: triage (default) | next | doing | blocked | done
+  "done": false,                         // optional — same thing as status="done"
   "visibility": "private",               // private (default) | workspace
   "collection": "Work",                  // optional: name or ID — created if missing
   "collections": ["Work", "Q3"]          // optional: array of names or IDs
@@ -119,6 +125,8 @@ Creates a new to-do. Returns `201 Created` with the created to-do and its collec
   "notes": "Include tests and docs",
   "due_date": "2026-07-15",
   "done": false,
+  "status": "next",
+  "source": "api",
   "completed_at": null,
   "position": 0,
   "visibility": "private",
@@ -144,6 +152,8 @@ Returns the to-do and a list of collections it belongs to.
   "notes": "Include tests and docs",
   "due_date": "2026-07-15",
   "done": false,
+  "status": "next",
+  "source": "api",
   "completed_at": null,
   "position": 0,
   "visibility": "private",
@@ -166,8 +176,9 @@ them. Only the UI supports removing tags.
   "title": "Update the feature",         // optional
   "notes": "Add more context",           // optional
   "due_date": "2026-07-20",              // optional, or null to clear
-  "done": true,                           // optional — true marks it complete
-  "position": 5,                          // optional — manual sort order
+  "status": "doing",                     // optional — move it to a lane
+  "done": true,                          // optional — same as status="done"
+  "position": 5,                         // optional — manual sort order
   "visibility": "workspace",             // optional — private or workspace
   "collection": "Work",                  // optional — adds to collections
   "collections": ["Q3"]                  // optional — adds these collections
@@ -176,8 +187,13 @@ them. Only the UI supports removing tags.
 
 **Response (200 OK):** the updated to-do with its full collections list.
 
-**Note:** `done: true` automatically stamps `completed_at` with the current timestamp.
-`done: false` clears `completed_at`.
+**About `status` and `done`:**
+
+`done` and `status` are two views of the same thing and are kept consistent for you by the database.
+Send whichever you prefer, never both. `status` moves it to a lane (triage|next|doing|blocked|done);
+setting `status="done"` closes the to-do, moving it off `done` reopens it. `done: true` puts it in
+the `done` lane, and `done: false` returns it to `next` (un-ticking reads as a correction, not a
+re-triage). An integration written before lanes existed keeps working unchanged.
 
 ## DELETE /todos/:id — Delete a to-do
 
@@ -220,10 +236,23 @@ Collections are named groups (the same ones you chat with in SupaNet). Pass a co
 
 Collections are additive on update — adding a collection does not remove existing ones.
 
+## Lifecycle lanes
+
+`status` places a to-do in a lane:
+
+- **triage** — new, not looked at yet. Default for to-dos filed by the assistant so a person reviews them.
+- **next** — committed to but not started.
+- **doing** — actively being worked.
+- **blocked** — waiting on something or someone else.
+- **done** — closed and complete (equivalent to `done: true`).
+
+The `done` boolean is kept consistent with `status` automatically: set `status="done"` to close a to-do,
+or use `done: true`. An old integration that only knows `done` still works without changes.
+
 ## Visibility
 
 - **private** (default) — only you (and workspace admins) can see the to-do.
-- **workspace** — everyone on your team can see it and collaborate (check it off, edit
+- **workspace** — everyone on your team can see it and collaborate (move between lanes, edit
   title/notes, reorder).
 
 ## Examples
@@ -237,14 +266,15 @@ curl -X POST "https://<project>.supabase.co/functions/v1/todos" \
   -d '{
     "title": "Ship the feature",
     "due_date": "2026-07-15",
+    "status": "next",
     "collection": "Work"
   }'
 ```
 
-### List open to-dos in "Work", sorted by due date
+### List blocked to-dos in "Work", sorted by due date
 
 ```bash
-curl "https://<project>.supabase.co/functions/v1/todos?collection=Work&status=open&sort=due" \
+curl "https://<project>.supabase.co/functions/v1/todos?collection=Work&status=blocked&sort=due" \
   -H "Authorization: Bearer <token>"
 ```
 
