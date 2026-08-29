@@ -1,0 +1,97 @@
+---
+title: Resource summaries
+description: Reusable AI summarization of links, files, artifacts, and more.
+---
+
+`summarize_resource` is the shared AI summarization capability. It resolves a resource as the calling user, extracts supported content, calls the configured `utility` model with no tools, caches the result by source version, and can write the result to a safe description field.
+
+## Supported sources
+
+- `link` — ordinary web pages and Dropbox file/share links
+- `file` — workspace files
+- `artifact`
+- `inbox_message`
+- `knowledge_page`
+- `text` — direct supplied text
+
+Text, Markdown, CSV, JSON, and source code files, PDFs, and common image formats (PNG, JPEG, WebP, GIF) are supported. Downloads are capped at 8 MB and extracted text at 60,000 characters. Office documents, audio/video, scanned PDFs, and Dropbox folders should use the capability-worker pipeline instead.
+
+## Direct API
+
+The tool is available through the existing `run-tool` endpoint:
+
+```json
+{
+  "tool": "summarize_resource",
+  "input": {
+    "source_kind": "link",
+    "source_id": "LINK_UUID",
+    "style": "tldr",
+    "max_words": 80,
+    "write_back": true
+  }
+}
+```
+
+`style` is `tldr`, `brief`, or `detailed`. Set `refresh:true` to bypass a matching cached result. `write_back:true` updates `links.description` or `files.description`; other source kinds return/cache the summary without modifying the source.
+
+### Summary styles
+
+- **`tldr`** (default) — one or two concise sentences with the main point and important outcome.
+- **`brief`** — one short paragraph covering the main points and important conclusions.
+- **`detailed`** — a compact but detailed summary covering the main points, conclusions, and important caveats.
+
+### Word limits
+
+The `max_words` parameter clamps to 20–500; defaults are 80 for tldr, 140 for brief, and 250 for detailed.
+
+## Agents and listeners
+
+The seeded builtin is an ordinary Tools row, so it can be attached to an agent or run through event listeners.
+
+A deterministic event listener can summarize every newly saved link with:
+
+- event: `link.created`
+- action: `run_tool`
+- tool: `summarize_resource`
+- input:
+
+```json
+{
+  "source_kind": "link",
+  "source_id": "{{event.entity_id}}",
+  "style": "tldr",
+  "write_back": true
+}
+```
+
+Dropbox links also run this automatically from the Links page after metadata is filled.
+
+## Caching
+
+Summaries are cached by the tuple `(owner, source_kind, source_id, source_version, style, max_words)`. On a second call with identical parameters, the cached result is returned without calling the model — unless `refresh:true` is set.
+
+Source version is derived from the source:
+
+- **Links** — the URL itself (so editing the URL invalidates the cache).
+- **Files** — the file's `created_at` timestamp (so uploading a new version invalidates it).
+- **Artifacts** — the artifact's `updated_at` timestamp.
+- **Text** — a SHA-256 hash of the supplied text.
+- **Other sources** — the resource's `updated_at` or `created_at` timestamp.
+
+## Safety and accounting
+
+Source access is re-checked as the caller even though builtin execution uses the service role. Dropbox credentials remain in Vault. Resource content is marked as untrusted, the model receives no tools, and content is not written to logs.
+
+Model usage is recorded with context `summary`. Cached summaries are owner-private and emit `summary.created` / `summary.updated` events — so listeners can react when summaries are generated (e.g., to log them or push to a notification queue).
+
+## Implementation
+
+The pure normalization and classification helpers live in `supabase/functions/_shared/resource_summary.ts` and are unit-tested. The full implementation is in `supabase/functions/_shared/resource_summarizer.ts`, which handles:
+
+- Resource resolution and access enforcement
+- Content extraction (text, PDF, images) with size/format limits
+- Image and PDF content blocks for the model (no parsing in-edge)
+- Caching by source version
+- Optional write-back to description fields
+- Error handling that never throws (returns an error string instead)

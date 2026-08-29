@@ -1,0 +1,112 @@
+---
+title: Resource summaries
+description: Auto-generate AI summaries of links, files, and workspace content.
+---
+
+SupaNet can automatically generate short AI summaries of links, files, artifacts, inbox messages, and compiled knowledge pages. Summaries are cached so repeated requests use the saved result instead of calling the model again — saving cost and keeping your team's summaries consistent.
+
+## Why summaries are useful
+
+A summary lets you quickly understand what something contains without reading or watching the whole thing. You can:
+
+- **Summarize a link** — paste a URL (including Dropbox files) and get a one-sentence key takeaway or a short paragraph
+- **Summarize workspace files** — understand PDF documents, text files, and images without opening them
+- **Summarize artifacts and notes** — distill a longer artifact into a quick synopsis
+- **Bulk summarize via automation** — set up an event listener to auto-summarize every newly saved link or file
+- **Refresh manually** — ignore the cached summary and generate a fresh one when the content changes
+
+## Summarizing a link
+
+When you save a Dropbox link, SupaNet automatically generates a summary and saves it to the link's description after fetching Dropbox metadata. You can also manually refresh a link's summary at any time:
+
+1. On the Links page, hover over a link card and click the **refresh** icon (circular arrows).
+2. SupaNet generates a new summary and updates the link's description. The summary respects the cached result if nothing has changed; hold Shift while refreshing to force a fresh generation.
+
+## Supported summary styles
+
+Summaries come in three depths:
+
+- **TL;DR** (default) — one or two concise sentences with the main point and important outcome.
+- **Brief** — one short paragraph covering the main points and important conclusions.
+- **Detailed** — a compact but detailed summary covering the main points, conclusions, and important caveats.
+
+The default style is TL;DR (80 words max). You can customize the style and word limit when triggering a summary via automation or the API.
+
+## Automation with event listeners
+
+You can set up an event listener to summarize links automatically when they're created. Go to **Automation → Listeners** and create a new rule:
+
+- **Event:** `link.created`
+- **Action:** `run_tool`
+- **Tool:** `summarize_resource`
+- **Input:**
+
+```json
+{
+  "source_kind": "link",
+  "source_id": "{{event.entity_id}}",
+  "style": "tldr",
+  "write_back": true
+}
+```
+
+This rule runs every time someone saves a link and writes the summary to the link's description automatically.
+
+## Using the API
+
+The summarization tool is available through the [run-tool API](/docs/using/api#run-tools). You can summarize any supported resource:
+
+```bash
+curl -X POST https://your-project.supabase.co/functions/v1/run-tool \
+  -H "Authorization: Bearer $YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "tool": "summarize_resource",
+    "input": {
+      "source_kind": "link",
+      "source_id": "LINK_ID",
+      "style": "tldr",
+      "write_back": true
+    }
+  }'
+```
+
+Replace `LINK_ID` with the link's UUID. For other resource kinds (`file`, `artifact`, `inbox_message`, `knowledge_page`), use their IDs and set `source_kind` accordingly.
+
+To summarize direct text instead of a stored resource:
+
+```json
+{
+  "tool": "summarize_resource",
+  "input": {
+    "source_kind": "text",
+    "text": "The content to summarize",
+    "title": "Optional label",
+    "style": "brief"
+  }
+}
+```
+
+## Supported file types
+
+- **Text** — `.txt`, `.md`, `.csv`, `.json`, `.log`, source code files, and other plain text
+- **PDF** — all PDFs (text layer extraction; scanned documents are not supported)
+- **Images** — PNG, JPEG, WebP, GIF
+
+Other formats (Office documents, audio, video, Dropbox folders) are not supported by this summarizer. Use capability workers for those instead.
+
+## How caching works
+
+A summary is cached based on:
+
+- The resource's content version (URL for links, last-modified timestamp for files, hash for text)
+- The summary style (tldr, brief, or detailed)
+- The word limit you set
+
+If you request the same summary twice with the same style and word limit, the second request returns the cached result instantly. To generate a fresh summary and ignore the cache, set `refresh: true` in your run-tool call or hold Shift while refreshing a link on the Links page.
+
+## Safety
+
+Resource content is marked as untrusted — the model receives no tools and cannot execute any operations. Links and Dropbox files are fetched on demand (never pre-cached), and file downloads are capped at 8 MB. Dropbox credentials stay in the workspace vault and are never exposed to the model.
+
+Model usage is recorded for cost tracking, and summaries emit events so listeners can react when a summary is generated.

@@ -52,6 +52,17 @@ Click **Save** to apply your changes. The preview image and favicon can't be edi
 
 To change a link's **visibility** (private or workspace), use the toggle button on the card rather than the edit modal.
 
+## Summarizing links
+
+SupaNet can automatically generate an AI summary of any link's content. For Dropbox links, a summary is generated automatically after metadata is fetched. To manually summarize a link:
+
+1. Hover over the link card and click the **refresh** icon (circular arrows).
+2. SupaNet generates a summary using the utility model and saves it to the link's description.
+
+Summaries are cached, so repeated summaries use the stored result without calling the model again. You can override the cache by holding Shift while clicking refresh.
+
+See [Resource summaries](/docs/using/resource-summaries) for more details on styles, automation, and the API.
+
 ## Link screenshots
 
 When you save a link, SupaNet shows a preview image — either a captured screenshot or the page's OpenGraph preview image (`og:image`). A screenshot is preferred because it shows the page as it actually appears.

@@ -10,6 +10,7 @@
     "capability-workers",
     "loops",
     "tools",
+    "resource-summaries",
     "artifact-api-reference",
     "todos-api-reference",
     "knowledge-compiler",
