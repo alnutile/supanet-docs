@@ -27,10 +27,12 @@ The access token is stored **only in Supabase Vault** — never in a table, conf
 When a user or agent saves a Dropbox link (via the Links page or the `save_link` builtin tool):
 
 1. SupaNet detects it's a Dropbox URL (either a share link or personal folder URL)
-2. The `dropbox-meta` edge function (verify_jwt: true) reads the workspace's token from Vault
-3. It calls the Dropbox API to fetch file metadata (name, type, size, modification date)
-4. For image files, it also fetches a thumbnail
-5. The link card updates with the enriched title, description, and preview image
+2. The `fetchLinkMeta` function attempts to fetch metadata via the `dropbox-meta` edge function first
+3. The `dropbox-meta` edge function (verify_jwt: true) reads the workspace's token from Vault
+4. It calls the Dropbox API to fetch file metadata (name, type, size, modification date)
+5. For image files, it also fetches a thumbnail
+6. If the Dropbox API succeeds, the link is enriched with Dropbox-specific metadata; if it fails or is unavailable, the generic `link-meta` endpoint is used as a fallback
+7. The link card updates with the title, description, and preview image
 
 Supported Dropbox URL formats:
 
@@ -40,7 +42,7 @@ Supported Dropbox URL formats:
 
 ## Metadata enrichment
 
-Dropbox links are enriched with:
+When the Dropbox API endpoint succeeds, links are enriched with:
 
 - **Title** — the actual file name (e.g., `project-proposal.pdf`)
 - **Description** — the file path (`Dropbox file: /Projects/Proposals/project-proposal.pdf`)
@@ -49,7 +51,7 @@ Dropbox links are enriched with:
 - **File size** — in bytes
 - **Modified date** — when the file was last changed
 
-Generic OpenGraph metadata is bypassed — Dropbox metadata takes precedence for Dropbox URLs.
+Dropbox metadata takes precedence over generic OpenGraph metadata. If the Dropbox endpoint is unavailable or the Dropbox token is not configured, the generic `link-meta` endpoint fetches standard OpenGraph metadata as a fallback.
 
 ## Where credentials live
 
