@@ -29,15 +29,15 @@ Click **New link** or paste a URL directly into the text input. SupaNet inserts 
 
 If the fetch times out or fails, the link stays with the bare URL and hostname — adding a link never blocks on metadata.
 
-### Dropbox integration
+### Dropbox links
 
-If your workspace admin has connected a Dropbox account in **Settings → Dropbox**, Dropbox links automatically fetch richer metadata:
+Dropbox public share links are client-rendered, and Dropbox's servers sometimes return a generic "Dropbox" title to preview fetches. SupaNet handles this by extracting useful metadata directly from the URL:
 
-- **File name** — the actual Dropbox file name instead of a generic title.
-- **Thumbnail preview** — a visual thumbnail for image files (JPG, PNG, etc.).
-- **File details** — file type and modified date.
+- **File name** — SupaNet parses the filename from Dropbox share URLs (both current and legacy formats) so you see the actual file name instead of a generic title.
+- **File type** — the extension is detected and shown in the description (e.g., "Shared Dropbox PDF file").
+- **Favicon** — the Dropbox favicon is always set for instant recognition.
 
-This works for both public Dropbox share links and personal Dropbox URLs. The integration is transparent — just paste a Dropbox URL as you would any other link and SupaNet fetches enhanced metadata automatically.
+This works automatically for any Dropbox public share link — just paste the URL as you would any other link. If the page fetch succeeds and returns useful metadata, that takes precedence; if it serves a generic title, the filename-based fallback ensures the link is still useful.
 
 ## Editing a link
 
