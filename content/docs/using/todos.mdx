@@ -21,6 +21,11 @@ To-dos are a lightweight way to capture work without leaving SupaNet. You can:
 - **Check them off** as you complete work.
 - **View in five ways** — List (your manual order), Board (by lane), Time (by due date),
   Calendar (month grid), or Focus (one at a time).
+- **Drag tasks between views** — the entire card is draggable. On the Board view, drag a
+  task to move it between lanes. On the Calendar, drag a task from any day to another day
+  or back to the undated pile to reschedule. Calendar days themselves are draggable too.
+- **See live updates** — when a teammate moves a task or changes it, you see it update
+  on your screen instantly. The changed task briefly highlights so you notice the move.
 - **Share with your team** — mark a task as workspace-visible so everyone can
   collaborate, move tasks between lanes, and see updates in real time.
 
@@ -33,13 +38,14 @@ with options to create, edit, move, and delete them.
 
 Switch between views using the buttons at the top of the page:
 
-- **List** — your manual drag-and-drop order (default).
-- **Board** — tasks organized by lane (triage, next, in progress, blocked, done). Drag to move
-  a task to a different lane.
+- **List** — your manual drag-and-drop order (default). The entire card is draggable to reorder.
+- **Board** — tasks organized by lane (triage, next, in progress, blocked, done). Drag any task
+  to move it to a different lane. The whole card is the drag surface.
 - **Time** — tasks organized by due date (overdue, today, this week, later, no date). Drag to
-  reschedule a task.
-- **Calendar** — month grid showing due dates, with an undated pile. Drag a task onto a day
-  to schedule it.
+  reschedule a task to a different time bucket.
+- **Calendar** — month grid showing due dates, with an undated pile below. Drag a task from any
+  day to another day to reschedule, or drag it back to the undated pile to remove its due date.
+  Calendar days themselves are draggable too, so you can move a task day by day.
 - **Focus** — one task at a time, hardest-to-ignore first (overdue tasks first, then due today,
   then blocked, then agent-filed triage). Perfect for getting things done.
 
@@ -110,10 +116,18 @@ automatically filed into all of them, so it shows up in all your focused views.
 
 - **Private tasks** — only you (and admins) can see or edit them.
 - **Workspace tasks** — everyone on your team can see them, check them off, edit the
-  title or notes, and reorder them.
+  title or notes, and drag them between lanes or dates.
 
-When a task is workspace-visible, your team sees live updates whenever anyone checks it
-off or changes it.
+### Live updates
+
+When a task is workspace-visible, your team sees live updates instantly. If a teammate
+moves a task or changes it while you're looking at the board, the change appears on
+your screen right away — no reload needed. The changed task briefly highlights with a
+blue border so you notice the move, then the highlight fades after a few seconds.
+
+This works across all views: if one person drags a task to "Blocked" on the Board view,
+everyone else watching the board sees it move instantly. Similarly, if someone reschedules
+a task on the Calendar, the update appears for everyone else in real time.
 
 ## REST API and automation
 
