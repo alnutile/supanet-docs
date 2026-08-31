@@ -80,3 +80,12 @@ Or pull data from a table, manipulate it outside, and push the results back:
 Settings → Connect Claude also gives you access to a comprehensive **SupaNet workspace skill**. If you're using Claude Code or Claude Desktop, grab that skill — it's a full reference of all the tools, with patterns for filing into collections, searching the knowledge base, and more.
 
 For the MCP server architecture, see the [Building on SupaNet](/docs/building/mcp-server) docs.
+
+## Not using Claude? Other ways in
+
+MCP via OAuth or personal token is the primary way to connect external Claudes, but SupaNet is reachable from anywhere:
+
+- **From the terminal or a script:** use the [**supanet CLI**](/docs/using/companion-resources) to call tools, manage to-dos and artifacts, and chain operations together. Works from a shell, cron job, or any environment that can run Node.
+- **Teaching an agent:** install [**supanet-skills**](/docs/using/companion-resources) into Claude Code, pi, or Codex so the agent learns the workspace conventions without guessing.
+
+See [CLI & Skills](/docs/using/companion-resources) for installation and examples.

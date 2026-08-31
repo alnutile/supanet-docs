@@ -1,0 +1,98 @@
+---
+title: CLI & Skills — reach your workspace from anywhere
+description: Use the supanet CLI from scripts and cron jobs, or connect Agent Skills to Claude Code, pi, or Codex.
+---
+
+Two optional companion resources extend how you reach your SupaNet workspace outside the browser. Both authenticate with the **same personal token** from **Settings → Connect Claude**, so every call runs as you with row-level security still enforced server-side.
+
+| Resource | Use when |
+| --- | --- |
+| **supanet CLI** | You (or an automation) want the workspace from a terminal, a script, or cron |
+| **supanet-skills** | You want a coding agent (Claude Code, pi, Codex) to know how to use the workspace well |
+
+## supanet — the command-line client
+
+A thin, dependency-free wrapper over SupaNet's existing token-authed HTTP surfaces: the universal **`run-tool`** runner (every builtin, no model in the loop) plus the plain-REST **`artifacts`** and **`todos`** endpoints. No new server-side API — it just makes the same surface ergonomic from a shell.
+
+### Install
+
+```bash
+# curl method
+curl -fsSL https://raw.githubusercontent.com/alnutile/supanet-cli/main/install.sh | sh
+
+# or npm
+npm install -g supanet-cli
+```
+
+### Configure once
+
+```bash
+supanet config set --url https://‹your-project›.supabase.co --token ‹your-token›
+```
+
+You can also use environment variables `SUPANET_URL` and `SUPANET_TOKEN` instead.
+
+### Common commands
+
+```bash
+supanet tools                                   # discover every runnable tool + schema
+supanet run list_todos --status open            # run any tool
+supanet todos add "Ship the thing" --due 2026-07-01 --collection Work
+supanet artifacts create "Design doc" --file doc.md --type markdown
+supanet note "Meeting notes" --file notes.md --collection Team
+supanet search "what's our refund policy"
+supanet chain --file steps.json                 # chain up to 10 tools, {{prev}} threading
+```
+
+### Repository
+
+[alnutile/supanet-cli](https://github.com/alnutile/supanet-cli) on GitHub.
+
+## supanet-skills — portable Agent Skills
+
+Nine [Agent Skills](https://agentskills.io) that teach a coding agent the SupaNet conventions — so it stops guessing at the API. They load on demand when a task matches.
+
+### What's included
+
+- **supanet-getting-started** — start here: what SupaNet is and how to connect
+- **intranet-workspace** — the broad tour
+- **supanet-artifacts** — create, edit, search, and organize artifacts
+- **supanet-collections** — file items into collections and scope chats to them
+- **supanet-tables** — create tables, query data, and submit forms
+- **supanet-table-forms** — the public form submission contract
+- **supanet-knowledge-compiler** — maintain compiled knowledge and resolve conflicts
+- **supanet-planner** — whiteboards and card boards
+- **supanet-automation** — agents, tools, webhooks, schedules, listeners, and loops
+
+### Install
+
+```bash
+# Any agent (Claude Code, pi, Codex)
+npx skills add alnutile/supanet-skills --all
+
+# Just the intro
+npx skills add alnutile/supanet-skills -s supanet-getting-started -g -y
+
+# pi
+pi install git:github.com/alnutile/supanet-skills
+
+# Claude Code — clone into your skills directory
+git clone https://github.com/alnutile/supanet-skills ~/.claude/skills/supanet-skills
+```
+
+### Repository
+
+[alnutile/supanet-skills](https://github.com/alnutile/supanet-skills) on GitHub.
+
+## Comparing your options
+
+| Angle | MCP / OAuth | CLI | Skills |
+| --- | --- | --- | --- |
+| **Best for** | Interactive Claude in Desktop / Code / claude.ai | Scripts, cron, automation, deterministic workflows | Teaching an agent the conventions |
+| **Token type** | OAuth or personal bearer | Personal bearer | Personal bearer |
+| **Cost** | Minimal (no model in the loop for tool calls) | Minimal (deterministic) | Same as regular chat (model needed for reasoning) |
+| **When to use** | Chat with Claude about your workspace; push artifacts, notes, files | Automate repetitive tasks; fetch data and pipe it to external systems | Let Claude reason about what to do and use SupaNet idiomatically |
+
+## Keeping the docs honest
+
+When a feature in SupaNet changes its shape — a tool's name, arguments, an endpoint, or the artifact protocol — the matching documentation in these repos may fall out of sync. If you spot staleness, file an issue or PR on the companion repo rather than working around it. The `skills/` directory in the main SupaNet codebase is unrelated; these companion repos are the portable references.
