@@ -63,6 +63,12 @@ The core patterns:
 - **Knowledge sharing** is separate from file visibility. Document chunks are
   readable by the owner or when the parent document's scope is `workspace`; only
   the owner can change the scope. The raw PDF stays owner-private regardless.
+- **Collection visibility propagation:** When a collection becomes `workspace`-visible,
+  all private to-dos, links, whiteboards, card boards, tables, and inbox messages in it
+  automatically become `workspace`-visible via triggers. Similarly, when an item is added to
+  a `workspace`-visible collection, it automatically becomes `workspace`-visible (if it was
+  private). This ensures items in a shared collection are always accessible to everyone who
+  can see the collection. Artifacts and files are excluded from this propagation.
 
 ## Invite-only signup
 
