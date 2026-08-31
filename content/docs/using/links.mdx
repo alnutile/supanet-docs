@@ -87,3 +87,15 @@ When a link is workspace-visible, your team sees live updates whenever anyone ed
 ## Searching and finding
 
 Use the search box at the top of the Links page to filter links by title, URL, description, or notes. The search is case-insensitive and matches any substring. You can also organize links into collections to keep them grouped by topic or project, and use the collection filter chips to scope the grid to a single collection.
+
+## Timestamps and date filtering
+
+Each link shows when it was **saved** and, if you've edited it, when it was **last updated**. The timestamps appear in the link details and are visible when you ask the assistant about your links.
+
+When you use the `list_links` tool (or ask the assistant "show me links from this week"), you can filter by date range:
+
+- **`since`** - only links at or after this date (ISO 8601 timestamp like `2026-08-31T14:00:00Z` or a bare date like `2026-08-31`)
+- **`until`** - only links at or before this date (same format; if you use a bare date, it includes the entire day)
+- **`date_field`** - which date to filter on: when the link was **saved** (default) or last **updated**
+
+For example, asking "what did we save this week" uses the saved date; asking "what links have been changed since Tuesday" uses the updated date. This works both in the app (when chatting with collections) and over the API or MCP.
