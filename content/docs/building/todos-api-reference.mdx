@@ -255,6 +255,13 @@ or use `done: true`. An old integration that only knows `done` still works witho
 - **workspace** — everyone on your team can see it and collaborate (move between lanes, edit
   title/notes, reorder).
 
+`"team"` and `"shared"` are accepted as aliases for `"workspace"`. An unrecognised value
+is a `400` error rather than a silent fall back to `private`, so a script can never believe
+it shared a to-do that stayed invisible to everyone else. Pass it on create, or `PATCH` it
+later to share an existing to-do. Filing a to-do into a **workspace collection** promotes
+it to `workspace` on its own, so you usually only need this for an ad-hoc team task outside
+a collection.
+
 ## Examples
 
 ### Create a to-do due next week in the "Work" collection
@@ -269,6 +276,24 @@ curl -X POST "https://<project>.supabase.co/functions/v1/todos" \
     "status": "next",
     "collection": "Work"
   }'
+```
+
+### Create a to-do the whole team can see and tick off
+
+```bash
+curl -X POST "https://<project>.supabase.co/functions/v1/todos" \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{"title": "Renew the domain", "visibility": "workspace"}'
+```
+
+### Share an existing to-do with the team
+
+```bash
+curl -X PATCH "https://<project>.supabase.co/functions/v1/todos/<id>" \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{"visibility": "workspace"}'
 ```
 
 ### List blocked to-dos in "Work", sorted by due date
