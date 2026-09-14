@@ -166,6 +166,14 @@ After the one-time setup of secrets and environment variables, you never run
 The workflow is trunk-based: run `npm run build`, commit, and push to `main`;
 hosting and migrations pick it up.
 
+## Releasing to tenants (hosted SaaS)
+
+If you're operating SupaNet as a hosted SaaS with multiple tenant deployments, use the **`release-to-tenants`** agent skill to orchestrate the release: a step-by-step runbook that handles preflight checks, opening the `main → release` PR, merging it, watching the fan-out workflow apply migrations and redeploy edge functions to every live tenant, and verifying the rollout.
+
+The skill needs only `gh` — no local Supabase credentials. Tell an agent "do a release", "ship to the tenants", or "roll out to all customers" and it will follow the runbook end-to-end.
+
+See [Control plane](/docs/building/control-plane) for the architecture of the fan-out workflow.
+
 ## Production serve
 
 ```bash
