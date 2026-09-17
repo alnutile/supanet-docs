@@ -57,6 +57,10 @@ The core patterns:
   that is exactly how anonymous `/share/a/:slug` access works.
 - **Storage** for the `files` bucket is private; policies scope objects to the
   uploading user's folder.
+- **User avatars** (`avatars` bucket) are public read, so profile pictures display
+  across the app (sidebar, team chat messages). Uploads are scoped to the user's
+  folder; a 2MB limit and MIME whitelist (PNG/JPEG/WebP/GIF) are enforced by the
+  bucket configuration and the upload handler.
 - **Artifact images** (`artifact-images` bucket) are private by default; RLS
   allows reading if the owner (by folder) *or* if the linked artifact is
   public/unlisted. Image privacy mirrors the artifact's visibility.
