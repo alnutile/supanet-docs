@@ -21,9 +21,32 @@ npm run gen:types  # regenerate database types from the linked project
 
 Always run `npm run build` before committing UI or logic changes - it typechecks
 the whole app. Also run `npm test` (and `npm run test:deno` if you changed
-edge functions). Add or update tests when you add or change logic like parsing,
-validation, or calculations. Tests for frontend logic live next to the code as
+edge functions) and `npm run test:smoke` to verify the authenticated app renders.
+Add or update tests when you add or change logic like parsing, validation, or
+calculations. Tests for frontend logic live next to the code as
 `src/**/*.test.ts(x)`; edge-function tests live in `supabase/functions/tests/`.
+
+### The smoke test
+
+The smoke test (`npm run test:smoke`) is the only check that renders the authenticated
+app in a real browser. Lint and typecheck are static; the unit suite mounts one component
+at a time; and `/login` is the only route that renders without a session. So a crash in
+the app shell (Layout or a global provider) will pass all those checks but fail at
+runtime.
+
+The test loads three real routes (`/home`, `/todos`, `/artifacts`) in headless Chrome
+against a stubbed Supabase, with a fake session injected. It fails if a page throws an
+uncaught error or if the `#root` div is empty. It deliberately asserts nothing about
+features — it just answers "did the app come up?" — so it stays fast and never flakes
+into being ignored.
+
+The test finds a browser that's already installed (via `PLAYWRIGHT_CHROMIUM_PATH` env
+override, or the Claude Code image's `/opt/pw-browsers/chromium`, or the runner's
+Chrome/Chromium) so CI never downloads a browser.
+
+A hook or provider that allocates a globally-keyed resource (a realtime channel topic,
+a storage key, a singleton) must be safe to mount more than once. The unit suites cannot
+see that, so the smoke test catches it.
 
 ## Environment and secrets
 
@@ -149,10 +172,10 @@ point at localhost.
 Pushing to `main` updates everything automatically:
 
 - **Tests:** a GitHub Action (`.github/workflows/test.yml`) runs lint, build,
-  frontend tests, and edge-function tests on every PR and every push to `main`.
-  The feature bot's PRs get the same checks via `.github/workflows/claude-feature.yml`
-  (GitHub doesn't fire normal PR workflows for bot PRs, so the feature workflow runs
-  them inline).
+  frontend tests, edge-function tests, and the smoke test on every PR and every
+  push to `main`. The feature bot's PRs get the same checks via
+  `.github/workflows/claude-feature.yml` (GitHub doesn't fire normal PR workflows
+  for bot PRs, so the feature workflow runs them inline).
 - **Frontend:** Railway rebuilds the app from the latest commit.
 - **Edge functions:** a GitHub Action redeploys any function that changed.
 - **Database migrations:** a separate Action applies any new migration files (see
