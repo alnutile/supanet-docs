@@ -25,6 +25,7 @@
     "slack",
     "email",
     "dropbox",
+    "github-repositories",
     "memory",
     "data-model",
     "teach-supanet-about-itself"

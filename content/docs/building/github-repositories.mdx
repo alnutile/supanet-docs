@@ -1,0 +1,62 @@
+---
+title: GitHub repositories
+description: Architecture and implementation of GitHub repository snapshots in collections.
+---
+
+Collections can import and store snapshots of GitHub repositories, making source code, documentation, and manifests available to chat and agents. Open a collection → **GitHub repositories → Connect repository** to import a repository by name or URL.
+
+## Connection and authentication
+
+Enter an `owner/repo` slug or a GitHub URL, optionally specify a branch and folder. The importer works with public repositories without a token, subject to GitHub's unauthenticated rate limit.
+
+For **private repositories**, add a GitHub token to the workspace Secrets vault (`/vault`, managed by admins) and select it when connecting. Use a fine-grained token with **Contents: read** scope and add `api.github.com` to its **Allowed hosts**. Organization approval or SSO may be required depending on your setup.
+
+Private secrets are usable by their owner; workspace secrets are usable by all members. Token replacement, revocation, and deletion stay in the existing Secrets management UI — no separate GitHub credential store is introduced.
+
+Deleting a secret does not delete imported snapshots. Disconnect removes that collection's snapshot.
+
+## Import and refresh
+
+**Initial import** resolves the configured branch to a commit, fetches the repository tree, and selects eligible files. **Refresh** repeats this and atomically replaces the stored snapshot, reusing unchanged file blobs and dropping deleted files from the new version.
+
+A failed refresh retains the last successful snapshot and displays an error. Interrupted jobs can be retried after ten minutes. Refresh is manual; automatic schedules and webhook refreshes are not implemented.
+
+## File selection and limits
+
+Imports prioritize README/architecture documentation, docs and manifests, then source code:
+
+- **Eligible files:** Markdown, text, source code (TypeScript/JavaScript, Python, Go, Rust, Java, PHP, Ruby, C#, SQL, JSON, YAML, TOML, XML, CSS, Dockerfile, Makefile, manifests), and language-specific config files.
+- **Excluded:** Dependencies (`node_modules`, `vendor`, `dist`), build output, lockfiles, `.env` files, private keys, common secret filenames, binaries, symlinks, and submodules.
+- **File limits:** 150 files maximum, 60 KB per file, 1 MB total.
+
+This is not a secret scanner — only connect repositories whose eligible source files are suitable for your collection's readers. GitHub trees that are truncated cause a visible import failure rather than publishing an incomplete snapshot. A folder path scopes the import, though the GitHub recursive tree API still needs to fit within GitHub's limits.
+
+The import panel reports indexed and omitted file counts. For a monorepo, attach focused folders separately in different connections — this is a bounded snapshot, not a complete code index.
+
+## Context window budgeting
+
+Collection chat ranks indexed file paths and content against the latest user question and injects bounded excerpts, plus file paths, commit SHA, refresh date and coverage summary. The shared collection loader also provides repository context to other agent loops (documentation-first when there is no query).
+
+Across a selection of multiple collections, the system loads up to 20 repository snapshots with a combined 32,000-character budget, within the existing collection context window limit. Repository context adds approximately 8,000 tokens beyond the collection meter estimate.
+
+Repository evidence is labelled as untrusted reference material in model context and is **not** automatically compiled into knowledge pages.
+
+## Security and access
+
+- **Owner control:** Only the collection owner can connect, refresh, or change repository credentials. Disconnecting removes the snapshot.
+- **RLS inheritance:** Reads inherit collection RLS, including later visibility changes — sharing a collection shares its imported code.
+- **No credential leakage:** Only secret metadata reaches the UI picker. The importer never includes secret values in model context. Requests go to `api.github.com` only; redirects are rejected. Repository code is never executed.
+- **Sharing implications:** The setup panel explains that sharing a collection shares its imported code, including private GitHub repositories.
+
+## Deployment
+
+Migration `0127_github_repositories.sql` adds the `collection_repositories` snapshot table with a foreign key to the existing `vault_secrets` metadata.
+
+The importer uses the existing service-role-only `read_vault_secret` RPC and rechecks the secret's owner/workspace scope and allowed hosts on every refresh. The existing Secrets tools retain their existing behavior.
+
+Apply the migration and deploy the `github-repositories`, `chat`, and any functions that import `_shared/collections.ts` modules, then deploy the frontend. The main workflows handle these automatically. No additional edge function secrets are required.
+
+## References
+
+- [GitHub REST API — get a tree](https://docs.github.com/en/rest/git/trees#get-a-tree)
+- [GitHub REST API — get a blob](https://docs.github.com/en/rest/git/blobs#get-a-blob)
