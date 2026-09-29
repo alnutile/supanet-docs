@@ -6,6 +6,7 @@
     "architecture",
     "deploy",
     "control-plane",
+    "tenant-backups",
     "agents",
     "capability-workers",
     "loops",
