@@ -63,12 +63,14 @@ app UI lets you untag.
 
 ## Visibility and sharing
 
-- **Private** (default): only you can see it.
-- **Workspace**: all team members can see and edit it.
-- **Unlisted** or **public**: you get back a `public_slug` and a shareable link that
-  works for people outside SupaNet.
-- **HTML artifacts** also get a `share_url`: a standalone, full-screen page served
-  by SupaNet (unlisted and public only).
+- **Private** (default): only you can see it. No public link.
+- **Workspace**: all team members can see and edit it. No public link.
+- **Unlisted** or **public**: you get back a `public_slug`, a `public_url` (the shareable link at `/share/a/<slug>`), and (for HTML only) a `standalone_url` (a full-screen page at `/p/<slug>`).
+
+The API returns three URL fields with every artifact:
+- **`url`** — the signed-in editor link.
+- **`public_url`** — the public share link (null if not shared).
+- **`standalone_url`** — the full-page view for HTML artifacts (null otherwise).
 
 ## Types
 

@@ -54,7 +54,9 @@ Response:
       "language": null,
       "visibility": "private",
       "public_slug": null,
-      "share_url": null,
+      "url": "/artifacts/…",
+      "public_url": null,
+      "standalone_url": null,
       "created_at": "…",
       "updated_at": "…"
     }
@@ -62,6 +64,11 @@ Response:
   "count": 1
 }
 ```
+
+Each artifact includes three URL fields:
+- **`url`** - the signed-in editor link (always present).
+- **`public_url`** - the public share link, or null if the artifact is not shared (`unlisted` or `public` with a slug). Format: `/share/a/<slug>`.
+- **`standalone_url`** - for HTML artifacts only, the full-page view (e.g. `/p/<slug>`), or null otherwise.
 
 ## POST /artifacts — create
 
@@ -134,6 +141,33 @@ curl -X PATCH "https://<project>.supabase.co/functions/v1/artifacts/<id>" \
   -d '{"content": "# Updated", "visibility": "public"}'
 ```
 
+## POST /artifacts/:id/share — share an artifact (MCP tool)
+
+**Note:** This is exposed only through the MCP server as the `share_artifact` tool, not as a REST endpoint. It publishes an artifact by link.
+
+### share_artifact (MCP tool)
+
+Publish an artifact you own by link. Sets its visibility to "unlisted" (default, anyone with the link) or "public" (discoverable), creates its public slug if missing, and returns the shareable links.
+
+**Input:**
+- `artifact` (string, required) - the artifact id or its exact title.
+- `visibility` (string, optional) - `"unlisted"` (default) or `"public"`.
+
+**Returns:**
+- `url` — the signed-in editor link.
+- `public_url` — the public share link, or null if not shared.
+- `standalone_url` — the full-page view for HTML artifacts, or null.
+- `id` — the artifact id.
+- `visibility` — the visibility setting.
+- `public_slug` — the generated slug.
+
+**Example via MCP (Claude):**
+```
+Share my artifact "Dashboard" publicly.
+```
+
+This tells the assistant to use `share_artifact` with `visibility: "public"`, which generates a public link if one doesn't exist.
+
 ## DELETE /artifacts/:id
 
 Deletes the artifact. Returns `{ "deleted": true, "id": "…" }`.
@@ -177,14 +211,12 @@ default, but it can be shared with the workspace if you mark it shared in the UI
 
 Visibility options and their effects:
 
-- **private**: only the owner sees the artifact. No external link.
-- **workspace**: all team members can see and edit. No external link.
-- **unlisted** or **public**: mints a `public_slug` for external sharing.
-  - For **HTML artifacts**: you also get a `share_url` — a full-screen, sandboxed
-    page served by the app at `/p/<public_slug>`. The HTML runs in a secure iframe
-    so user code never executes on the app origin. Link it directly.
-  - For **other types**: build the in-app link yourself:
-    `https://<app-origin>/share/a/<public_slug>`.
+- **private** or **workspace**: only visible internally. No external link (public_url is null).
+- **unlisted** or **public**: generates a unique `public_slug` and mints shareable links.
+  - All artifacts get **`public_url`** — the shareable public link at `/share/a/<public_slug>`.
+  - **HTML artifacts only** also get **`standalone_url`** — a full-screen, chrome-free page at `/p/<public_slug>`. Use this for dashboards, diagrams, or landing pages you want to host at the app's own URL.
+
+**Important**: Public share routes resolve by `public_slug`, **not** by artifact id. This prevents accidental exposure — an agent building a link from the artifact id will get a 404, forcing it to use the ready-made `public_url` field instead. Always use `public_url` when sharing; never construct share links from the id.
 
 ## Authentication note
 

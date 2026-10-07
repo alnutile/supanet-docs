@@ -68,6 +68,7 @@ These are read at **build time**, so they must exist before `npm run build`.
 | `OPENROUTER_API_KEY` | Required. Set with `supabase secrets set ...`, never commit it |
 | `OPENROUTER_MODEL` / `OPENROUTER_EFFORT` | Optional overrides |
 | `OPENROUTER_SITE_URL` / `OPENROUTER_APP_NAME` | Optional ranking headers |
+| `APP_URL` | Recommended. The deployed frontend origin (e.g. `https://intranet.example.com`). MCP and artifact tools use it to return absolute `public_url` and `standalone_url` links. Falls back to `SITE_URL`, then `OPENROUTER_SITE_URL`. Set with `supabase secrets set APP_URL=…` |
 
 <Callout type="warn">
   Never put a secret in the front end. Only the anon key belongs there. The

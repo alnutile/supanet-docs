@@ -228,6 +228,16 @@ The artifact editor includes a **Copy ID** button in the toolbar. Click it to co
 
 The artifact editor also includes a **Copy Link** button in the toolbar. Click it to copy a link to the artifact. If the artifact is shared (unlisted or public), it copies the public share link. If the artifact is private, it copies a link to your personal artifact editor view.
 
+## Sharing artifacts via tools
+
+When you connect Claude or an external system to your workspace via MCP or the REST API, you can use the **`share_artifact`** tool to publish an artifact by link programmatically. This is useful for agents that create content and need to hand out a shareable link:
+
+```
+@artifact - create a flowchart, then share it publicly
+```
+
+The tool takes an artifact (by id or exact title), optionally sets its visibility to "unlisted" (anyone with the link) or "public" (discoverable), and returns the ready-made share link. The visibility and link are the same as what the editor's Sharing panel produces.
+
 ## A nice side effect
 
 Because artifacts live in the workspace, the assistant can also create and update
